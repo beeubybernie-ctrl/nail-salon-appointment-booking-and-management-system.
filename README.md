@@ -14,7 +14,7 @@ npm run dev                 # http://localhost:3000
 
 ### Default admin login (change after first login)
 
-- Email: `berniefoss@gmail.com`
+- Email: `bee.u.by.bernie@gmail.com`
 - Password: `admin123`
 
 Change the password via `prisma/seed.ts` (bcrypt hash) and re-seed, or set up a password-change flow. Never keep the default password in production.

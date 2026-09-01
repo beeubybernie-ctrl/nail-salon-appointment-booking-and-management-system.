@@ -4,22 +4,24 @@ import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
 
+const BUSINESS_EMAIL = "bee.u.by.bernie@gmail.com";
+
 async function main() {
   console.log("Seeding database...");
 
   // Create/update admin user
   const password = await bcrypt.hash("admin123", 10);
   await prisma.user.upsert({
-    where: { email: "berniefoss@gmail.com" },
+    where: { email: BUSINESS_EMAIL },
     update: {},
     create: {
-      email: "berniefoss@gmail.com",
+      email: BUSINESS_EMAIL,
       password,
       name: "Bernie",
       role: "admin",
     },
   });
-  console.log("Admin user created. Email: berniefoss@gmail.com / Password: admin123");
+  console.log(`Admin user created. Email: ${BUSINESS_EMAIL} / Password: admin123`);
   console.log("To change the default password, update the hash in prisma/seed.ts and re-run `npm run db:seed`.");
 
   // Service categories

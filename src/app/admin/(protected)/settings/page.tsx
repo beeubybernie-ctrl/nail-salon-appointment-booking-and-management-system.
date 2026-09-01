@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { SettingsEditor } from "@/components/admin/settings-editor";
+import { PasswordChange } from "@/components/admin/password-change";
 
 export const dynamic = "force-dynamic";
 
@@ -10,5 +11,10 @@ export default async function SettingsPage() {
     map[s.key] = s.value;
   });
 
-  return <SettingsEditor settings={map} />;
+  return (
+    <div>
+      <SettingsEditor settings={map} />
+      <PasswordChange />
+    </div>
+  );
 }

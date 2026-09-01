@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { DeleteClientButton } from "@/components/admin/client-delete-button";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,9 @@ export default async function ClientDetailPage({
           {client.email && (
             <span className="inline-flex items-center gap-1"><Mail className="h-4 w-4" /> {client.email}</span>
           )}
+        </div>
+        <div className="mt-3">
+          <DeleteClientButton clientId={client.id} />
         </div>
       </div>
 
