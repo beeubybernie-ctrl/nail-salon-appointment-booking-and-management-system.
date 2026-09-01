@@ -146,3 +146,32 @@ export async function PUT(
 
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await requireAdmin();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+
+  const appointment = await prisma.appointment.findUnique({ where: { id } });
+  if (!appointment) {
+    return NextResponse.json({ error: "Appointment not found." }, { status: 404 });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.appointmentExtra.deleteMany({ where: { appointmentId: id } });
+    await tx.appointment.delete({ where: { id } });
+  });
+
+  await logAudit(
+    "APPOINTMENT_DELETED",
+    "Appointment",
+    id,
+    `Booking deleted by admin (ref ${appointment.bookingRef})`
+  );
+
+  return NextResponse.json({ success: true });
+}

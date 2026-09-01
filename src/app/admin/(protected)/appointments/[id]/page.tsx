@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { formatPrice, formatTime24to12 } from "@/lib/business";
 import { AppointmentActions } from "@/components/admin/appointment-actions";
+import { DeleteAppointmentButton } from "@/components/admin/appointment-delete-button";
 import { whatsappLink } from "@/lib/notifications";
 import { whatsappClientLink } from "@/lib/whatsapp-client";
 import Link from "next/link";
@@ -64,10 +65,13 @@ export default async function AppointmentDetailPage({
             {appointment.bookingRef}
           </p>
         </div>
-        <AppointmentActions
-          appointmentId={appointment.id}
-          status={appointment.status}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <AppointmentActions
+            appointmentId={appointment.id}
+            status={appointment.status}
+          />
+          <DeleteAppointmentButton appointmentId={appointment.id} />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

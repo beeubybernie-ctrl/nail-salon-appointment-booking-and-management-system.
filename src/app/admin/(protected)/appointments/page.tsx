@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
+import { DeleteAppointmentButton } from "@/components/admin/appointment-delete-button";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,7 @@ export default async function AppointmentsPage() {
                 <th className="p-3">Service</th>
                 <th className="p-3">Price</th>
                 <th className="p-3">Status</th>
+                <th className="p-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-primary/10">
@@ -77,6 +79,9 @@ export default async function AppointmentsPage() {
                   <td className="p-3">{a.service.name}</td>
                   <td className="p-3 font-medium">{formatPrice(a.price)}</td>
                   <td className="p-3"><StatusBadge status={a.status} /></td>
+                  <td className="p-3">
+                    <DeleteAppointmentButton appointmentId={a.id} className="h-8 px-2 text-xs" />
+                  </td>
                 </tr>
               ))}
             </tbody>
