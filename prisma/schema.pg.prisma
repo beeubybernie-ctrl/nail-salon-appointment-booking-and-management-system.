@@ -1,0 +1,144 @@
+// Production schema — used ONLY for PostgreSQL deployments (e.g. Vercel + Neon).
+// Local development stays on SQLite via prisma/schema.prisma.
+// Keep models in sync between the two files.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  email     String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
+model ServiceCategory {
+  id       String   @id @default(uuid())
+  name     String
+  order    Int      @default(0)
+  services Service[]
+}
+
+model Service {
+  id           String        @id @default(uuid())
+  name         String
+  price        Int
+  duration     Int           @default(120)
+  categoryId   String
+  isPerNail    Boolean       @default(false)
+  isActive     Boolean       @default(true)
+  order        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  category         ServiceCategory     @relation(fields: [categoryId], references: [id])
+  appointments     Appointment[]
+  appointmentExtras AppointmentExtra[]
+}
+
+model Appointment {
+  id              String   @id @default(uuid())
+  bookingRef      String   @unique
+  clientId        String
+  serviceId       String
+  date            DateTime
+  startTime       String
+  endTime         String
+  duration        Int
+  price           Int
+  status          String   @default("CONFIRMED")
+  notes           String?
+  cancelToken     String   @unique
+  rescheduleToken String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  client  Client  @relation(fields: [clientId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+  extras  AppointmentExtra[]
+}
+
+model AppointmentExtra {
+  id            String      @id @default(uuid())
+  appointmentId String
+  serviceId     String
+  quantity      Int         @default(1)
+  pricePerUnit  Int
+  totalPrice    Int
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  service     Service     @relation(fields: [serviceId], references: [id])
+}
+
+model BusinessHours {
+  id        String @id @default(uuid())
+  dayOfWeek Int
+  openTime  String
+  closeTime String
+  isActive  Boolean @default(true)
+}
+
+model BusinessBreak {
+  id        String @id @default(uuid())
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  isActive  Boolean @default(true)
+}
+
+model BlockedTime {
+  id        String   @id @default(uuid())
+  title     String
+  date      DateTime
+  startTime String
+  endTime   String
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  type      String
+  recipient String
+  subject   String?
+  body      String
+  status    String   @default("PENDING")
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+}

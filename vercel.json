@@ -1,0 +1,3 @@
+{
+  "buildCommand": "prisma migrate deploy --schema prisma/schema.pg.prisma && prisma generate --schema prisma/schema.pg.prisma && next build"
+}

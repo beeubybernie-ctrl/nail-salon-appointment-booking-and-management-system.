@@ -32,6 +32,19 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local artifacts
+*.log
+server.log
+cookies.txt
+booking.json
+r.json
+*.local
+
+# database
+*.db
+*.db-journal
 
 # vercel
 .vercel

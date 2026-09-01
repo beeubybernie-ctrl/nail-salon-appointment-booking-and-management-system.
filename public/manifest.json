@@ -1,0 +1,17 @@
+{
+  "name": "Bee-U by Bernie — Nail Technician",
+  "short_name": "Bee-U",
+  "description": "Bee-U by Bernie – Be You. Be Beautiful. Book your nail appointment online.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7f4",
+  "theme_color": "#c19a6b",
+  "icons": [
+    {
+      "src": "/images/bee-u-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

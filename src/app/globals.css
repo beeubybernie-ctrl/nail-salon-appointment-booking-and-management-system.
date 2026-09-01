@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdfaf6;
+  --foreground: #3d2b26;
+  --primary: #c19a6b;
+  --primary-dark: #a67c4e;
+  --secondary: #8b5e3c;
+  --accent: #b76e79;
+  --accent-dark: #a35560;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
   --font-sans: var(--font-geist-sans);
+  --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.font-serif-display {
+  font-family: var(--font-serif);
+}
+
+/* Focus states for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Subtle transitions */
+button, a, input, select, textarea {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
