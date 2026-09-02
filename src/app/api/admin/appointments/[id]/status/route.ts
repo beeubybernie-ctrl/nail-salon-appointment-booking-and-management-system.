@@ -8,7 +8,6 @@ import {
   bookingConfirmedClientEmailHtml,
   sendBookingEmail,
 } from "@/lib/email-service";
-import { sendWhatsAppMessage } from "@/lib/whatsapp-send";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -107,11 +106,6 @@ export async function PATCH(
       body: message,
       html: bookingConfirmedClientEmailHtml(emailData),
     });
-
-    // Send the client a WhatsApp confirmation.
-    if (clientNumber) {
-      await sendWhatsAppMessage(clientNumber, message);
-    }
 
     await logAudit(
       "APPOINTMENT_CONFIRMED",

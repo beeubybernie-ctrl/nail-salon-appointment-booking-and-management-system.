@@ -9,10 +9,6 @@ import {
   bookingRequestAdminEmailHtml,
   sendBookingEmail,
 } from "@/lib/email-service";
-import {
-  sendWhatsAppMessage,
-  BUSINESS_NUMBER,
-} from "@/lib/whatsapp-send";
 import { BUSINESS } from "@/lib/business";
 import type { PrismaClient, Prisma } from "@prisma/client";
 
@@ -237,11 +233,6 @@ export async function POST(request: NextRequest) {
       body: requestMessage,
       html: bookingRequestAdminEmailHtml(emailData),
     });
-
-    // Send the admin a WhatsApp notification about the new booking request.
-    if (BUSINESS_NUMBER) {
-      await sendWhatsAppMessage(BUSINESS_NUMBER, requestMessage);
-    }
 
     const dateISO = new Date(appointment.date);
 
