@@ -25,6 +25,13 @@ import { cn } from "@/lib/utils";
 import { formatPrice, formatTime24to12 } from "@/lib/business";
 import { whatsappLink, bookingWhatsAppMessage } from "@/lib/notifications";
 
+interface AvailabilityDay {
+  date: string;
+  dayOfWeek: number;
+  isOpen: boolean;
+  slotCount: number;
+}
+
 interface ServiceOption {
   id: string;
   name: string;
@@ -82,6 +89,8 @@ export function BookingWizard() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [overview, setOverview] = useState<Record<string, AvailabilityDay>>({});
+  const [loadingOverview, setLoadingOverview] = useState(false);
 
   const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -146,6 +155,7 @@ export function BookingWizard() {
     setSelectedDate("");
     setSelectedSlot(null);
     setStep("date");
+    loadOverview();
     if (cats.length === 0) {
       router.replace("/book");
     }
@@ -203,6 +213,27 @@ export function BookingWizard() {
       setSlots([]);
     } finally {
       setLoadingSlots(false);
+    }
+  }
+
+  async function loadOverview() {
+    setLoadingOverview(true);
+    try {
+      const duration = selectedService?.duration ?? 120;
+      const res = await fetch(
+        `/api/availability/overview?days=14&duration=${duration}`,
+        { cache: "no-store" }
+      );
+      const data = await res.json();
+      if (res.ok && data.days) {
+        const map: Record<string, AvailabilityDay> = {};
+        for (const d of data.days) map[d.date] = d;
+        setOverview(map);
+      }
+    } catch {
+      // leave overview empty; the grid still works via per-date loading
+    } finally {
+      setLoadingOverview(false);
     }
   }
 
@@ -355,6 +386,9 @@ export function BookingWizard() {
             slots={slots}
             loadingSlots={loadingSlots}
             onSelectSlot={(s) => setSelectedSlot(s)}
+            overview={overview}
+            loadingOverview={loadingOverview}
+            defaultDuration={selectedService?.duration ?? 120}
             onSelectDatePreselected={() => {
               if (selectedDate && slots.length > 0) setStep("time");
             }}
@@ -568,6 +602,9 @@ function DateStep(props: {
   selectedSlot: Slot | null;
   slots: Slot[];
   loadingSlots: boolean;
+  overview: Record<string, AvailabilityDay>;
+  loadingOverview: boolean;
+  defaultDuration: number;
   onSelect: (date: string) => void;
   onSelectSlot: (s: Slot) => void;
   onBack: () => void;
@@ -583,9 +620,16 @@ function DateStep(props: {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-foreground/50">
-          Choose a date
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-foreground/50">
+            Choose a date
+          </h3>
+          {props.loadingOverview && (
+            <span className="mb-2 inline-flex items-center gap-1 text-xs text-foreground/50">
+              <Loader2 className="h-3 w-3 animate-spin" /> Checking availability...
+            </span>
+          )}
+        </div>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-7">
           {props.dates.map((d) => {
             const date = new Date(`${d}T00:00:00`);
@@ -593,27 +637,78 @@ function DateStep(props: {
             const dayNum = date.getDate();
             const month = date.toLocaleDateString("en-ZA", { month: "short" });
             const isSelected = props.selectedDate === d;
+            const info = props.overview[d];
+            const isClosed = info ? !info.isOpen : false;
+            const isFull = info ? info.isOpen && info.slotCount === 0 : false;
+            const hasSpots = info ? info.isOpen && info.slotCount > 0 : false;
             return (
               <button
                 key={d}
                 type="button"
                 onClick={() => props.onSelect(d)}
+                disabled={isClosed}
                 className={cn(
                   "flex flex-col items-center rounded-xl border p-3 text-center transition",
                   isSelected
                     ? "border-primary bg-primary/10 ring-1 ring-primary"
-                    : "border-primary/15 bg-white hover:border-primary/40"
+                    : isClosed
+                      ? "cursor-not-allowed border-primary/10 bg-primary/5 opacity-50"
+                      : isFull
+                        ? "border-red-200 bg-red-50"
+                        : "border-primary/15 bg-white hover:border-primary/40",
+                  hasSpots && "border-green-300 bg-green-50"
                 )}
                 aria-pressed={isSelected}
               >
-                <span className="text-xs font-medium uppercase text-foreground/50">
+                <span
+                  className={cn(
+                    "text-xs font-medium uppercase",
+                    isClosed ? "text-foreground/40" : isFull ? "text-red-600" : "text-foreground/50"
+                  )}
+                >
                   {dayName}
                 </span>
                 <span className="mt-1 text-xl font-semibold">{dayNum}</span>
                 <span className="text-xs text-foreground/50">{month}</span>
+                {info && (
+                  <span
+                    className={cn(
+                      "mt-1 text-[11px] font-medium",
+                      isClosed
+                        ? "text-foreground/40"
+                        : isFull
+                          ? "text-red-600"
+                          : hasSpots
+                            ? "text-green-700"
+                            : "text-foreground/50"
+                    )}
+                  >
+                    {isClosed
+                      ? "Closed"
+                      : isFull
+                        ? "Full"
+                        : `${info.slotCount} spot${info.slotCount === 1 ? "" : "s"}`}
+                  </span>
+                )}
               </button>
             );
           })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-foreground/50">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded border border-green-300 bg-green-50" /> Spots available
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded border border-red-200 bg-red-50" /> Fully booked
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-3 w-3 rounded border border-primary/10 bg-primary/5 opacity-50" /> Closed
+          </span>
+          <span className="w-full text-foreground/40">
+            Spot counts are estimates for this service (~{props.defaultDuration} min). Exact times
+            appear when you pick a date.
+          </span>
         </div>
 
         {props.selectedDate && (

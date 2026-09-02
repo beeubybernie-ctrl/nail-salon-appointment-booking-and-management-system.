@@ -282,3 +282,38 @@ export function formatISODate(date: Date): string {
   const d = date.getDate().toString().padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+export interface AvailabilityOverviewDay {
+  date: string;
+  dayOfWeek: number;
+  isOpen: boolean;
+  slotCount: number;
+}
+
+/**
+ * Returns a compact availability summary (open/closed + open-slot count) for
+ * each of the next `days` days (starting today), for a given appointment
+ * duration. Lightweight — used for the booking date grid and the weekly
+ * availability mini-calendar.
+ */
+export async function getAvailabilityOverview(
+  days: number,
+  duration?: number
+): Promise<AvailabilityOverviewDay[]> {
+  const dateStrs = await getAvailableDates();
+  const sliced = dateStrs.slice(0, days);
+
+  const results = await Promise.all(
+    sliced.map(async (date) => {
+      const result = await getAvailableSlots(date, duration);
+      return {
+        date,
+        dayOfWeek: result.dayOfWeek,
+        isOpen: result.isOpen,
+        slotCount: result.slots.length,
+      };
+    })
+  );
+
+  return results;
+}

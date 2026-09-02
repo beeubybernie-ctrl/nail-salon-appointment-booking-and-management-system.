@@ -4,6 +4,7 @@ import { CalendarHeart, Sparkles, Clock, Phone, Mail, Heart } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BusinessHoursBlock } from "@/components/client/business-hours";
+import { AvailabilityMiniCalendar } from "@/components/client/booking/availability-mini-calendar";
 import { whatsappLink, contactWhatsAppMessage } from "@/lib/notifications";
 import { BUSINESS } from "@/lib/business";
 
@@ -142,6 +143,13 @@ export default function HomePage() {
       {/* Business hours */}
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <BusinessHoursBlock />
+      </section>
+
+      {/* Availability mini-calendar */}
+      <section className="mx-auto max-w-6xl px-4 pb-4 sm:px-6">
+        <div className="mx-auto max-w-2xl">
+          <AvailabilityMiniCalendar />
+        </div>
       </section>
 
       {/* Contact bar */}
