@@ -20,6 +20,10 @@ function getTransporter(): nodemailer.Transporter | null {
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_PORT === 465,
+    requireTLS: SMTP_PORT === 587,
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
   return _transporter;
@@ -41,19 +45,33 @@ export async function sendEmail(opts: {
 }): Promise<"SENT" | "NOT_CONFIGURED"> {
   const transporter = getTransporter();
   if (!transporter) return "NOT_CONFIGURED";
-  try {
-    await transporter.sendMail({
+
+  const attempt = async () =>
+    transporter.sendMail({
       from: SMTP_FROM,
       to: opts.to,
       subject: opts.subject,
       text: opts.text,
       html: opts.html,
     });
-    return "SENT";
-  } catch (err) {
-    console.error("Failed to send email:", err);
-    return "NOT_CONFIGURED";
+
+  // Retry once on transient DNS/connection failures (common on Vercel serverless).
+  for (let i = 0; i < 2; i++) {
+    try {
+      await attempt();
+      return "SENT";
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isDns = /getaddrinfo|ENOTFOUND|ETIMEDOUT/i.test(msg) && i === 0;
+      if (!isDns) {
+        console.error("Failed to send email:", err);
+        return "NOT_CONFIGURED";
+      }
+      console.error("Email send failed, retrying once:", msg);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
   }
+  return "NOT_CONFIGURED";
 }
 
 export interface EmailMessageData {
