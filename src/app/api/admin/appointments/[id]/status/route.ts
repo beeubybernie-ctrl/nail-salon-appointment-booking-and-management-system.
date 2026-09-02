@@ -96,6 +96,7 @@ export async function PATCH(
       bookingRef: appointment.bookingRef,
       serviceName: appointment.service.name,
       date: dateLabel(appointment.date),
+      dateISO: appointment.date.toISOString().slice(0, 10),
       startTime: appointment.startTime,
       endTime: appointment.endTime,
       price: appointment.price,

@@ -10,6 +10,7 @@ import {
   sendBookingEmail,
 } from "@/lib/email-service";
 import { BUSINESS } from "@/lib/business";
+import { rateLimit } from "@/lib/rate-limit";
 import type { PrismaClient, Prisma } from "@prisma/client";
 
 type AppointmentCreate = Prisma.AppointmentGetPayload<{
@@ -45,6 +46,16 @@ const bookingSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Basic abuse protection: cap bookings per IP within a window.
+  const forwarded = request.headers.get("x-forwarded-for") || "";
+  const ip = (forwarded.split(",")[0] || "unknown").trim();
+  if (!rateLimit(`booking:${ip}`, 8, 5 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many booking requests. Please try again in a few minutes." },
+      { status: 429 }
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();

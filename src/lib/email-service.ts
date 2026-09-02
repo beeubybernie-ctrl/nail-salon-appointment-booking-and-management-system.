@@ -29,27 +29,51 @@ export async function sendEmail(opts: {
 }): Promise<"SENT" | "NOT_CONFIGURED"> {
   if (!isEmailConfigured()) return "NOT_CONFIGURED";
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: EMAIL_FROM,
-      to: [opts.to],
-      subject: opts.subject,
-      text: opts.text,
-      ...(opts.html ? { html: opts.html } : {}),
-    }),
-  });
+  const attempt = async () =>
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: EMAIL_FROM,
+        to: [opts.to],
+        subject: opts.subject,
+        text: opts.text,
+        ...(opts.html ? { html: opts.html } : {}),
+      }),
+    });
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    console.error("Resend send failed:", res.status, errText);
-    return "NOT_CONFIGURED";
+  // Retry transient failures (network / 5xx) up to 3 times.
+  for (let i = 0; i < 3; i++) {
+    try {
+      const res = await attempt();
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        // 4xx are not retryable (bad request / auth) — fail immediately.
+        if (res.status < 500) {
+          console.error("Resend send failed:", res.status, errText);
+          return "NOT_CONFIGURED";
+        }
+        if (i < 2) {
+          await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+          continue;
+        }
+        console.error("Resend send failed after retries:", res.status, errText);
+        return "NOT_CONFIGURED";
+      }
+      return "SENT";
+    } catch (err) {
+      if (i < 2) {
+        await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+        continue;
+      }
+      console.error("Resend send error after retries:", err);
+      return "NOT_CONFIGURED";
+    }
   }
-  return "SENT";
+  return "NOT_CONFIGURED";
 }
 
 export interface EmailMessageData {
@@ -59,6 +83,28 @@ export interface EmailMessageData {
   startTime: string;
   endTime: string;
   price: number;
+  dateISO?: string;
+}
+
+/**
+ * Builds a Google Calendar "add to calendar" URL for the appointment.
+ */
+export function googleCalendarLink(data: EmailMessageData): string {
+  const day = data.dateISO ? data.dateISO : "";
+  const start = day
+    ? `${day.replace(/-/g, "")}T${data.startTime.replace(":", "")}00`
+    : "";
+  const end = day
+    ? `${day.replace(/-/g, "")}T${data.endTime.replace(":", "")}00`
+    : "";
+  if (!start || !end) return "";
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: `Bee-U by Bernie — ${data.serviceName}`,
+    dates: `${start}/${end}`,
+    details: `Booking reference: ${data.bookingRef}. Be You. Be Beautiful.`,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 export async function sendBookingEmail(options: {
@@ -112,6 +158,7 @@ export function bookingRequestAdminEmailHtml(data: EmailMessageData & { clientNa
 }
 
 export function bookingConfirmedClientEmailHtml(data: EmailMessageData): string {
+  const calendarLink = googleCalendarLink(data);
   return `
     <div style="font-family: Georgia, serif; max-width: 520px; margin: 0 auto; color: #2d2d2d;">
       <div style="background: #e8f5e9; padding: 24px 28px; border-radius: 12px; border: 1px solid #c8e6c9;">
@@ -127,6 +174,15 @@ export function bookingConfirmedClientEmailHtml(data: EmailMessageData): string 
           <tr><td style="padding: 6px 0; color: #888;">Price</td><td style="padding: 6px 0; font-weight: 600;">R${data.price}</td></tr>
           <tr><td style="padding: 6px 0; color: #888;">Reference</td><td style="padding: 6px 0;">${data.bookingRef}</td></tr>
         </table>
+        ${
+          calendarLink
+            ? `<p style="margin: 20px 0 0;">
+              <a href="${calendarLink}" style="display:inline-block; background:#fff; color:#1a73e8; border:1px solid #1a73e8; padding:10px 24px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600;">
+                Add to Google Calendar
+              </a>
+            </p>`
+            : ""
+        }
         <p style="margin: 20px 0 0; font-size: 13px; color: #888;">We look forward to seeing you!</p>
         <p style="margin: 24px 0 0; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 16px;">
           Be You. Be Beautiful.
