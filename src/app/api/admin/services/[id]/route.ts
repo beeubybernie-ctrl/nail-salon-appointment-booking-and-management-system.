@@ -52,3 +52,43 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await requireAdmin();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+
+  const service = await prisma.service.findUnique({
+    where: { id },
+    include: { appointments: { select: { id: true } } },
+  });
+  if (!service) {
+    return NextResponse.json({ error: "Service not found." }, { status: 404 });
+  }
+
+  if (service.appointments.length > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "This service has linked appointments and cannot be deleted. Set it to inactive instead.",
+      },
+      { status: 409 }
+    );
+  }
+
+  await prisma.appointmentExtra.deleteMany({ where: { serviceId: id } });
+  await prisma.service.delete({ where: { id } });
+
+  await logAudit(
+    "SERVICE_DELETED",
+    "Service",
+    id,
+    `${service.name} deleted by admin`
+  );
+
+  return NextResponse.json({ success: true });
+}

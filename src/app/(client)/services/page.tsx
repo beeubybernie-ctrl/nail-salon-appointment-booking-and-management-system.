@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     "Explore Bee-U by Bernie nail services – manicures, acrylics, gel X, overlays and extras. Be You. Be Beautiful.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ServicesPage() {
   const catalog = await getServiceCatalog();
 

@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     "See the full Bee-U by Bernie price list – manicures, acrylics, gel X, overlays and extras.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function PriceListPage() {
   const catalog = await getServiceCatalog();
   const extrasCat = catalog.find((c) => c.categoryName === "EXTRAS");

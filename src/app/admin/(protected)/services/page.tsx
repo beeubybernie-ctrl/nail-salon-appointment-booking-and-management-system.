@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/business";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditServiceForm } from "@/components/admin/service-edit";
+import { DeleteServiceButton } from "@/components/admin/service-delete";
+import { AddServiceForm } from "@/components/admin/service-add";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +39,9 @@ export default async function ServicesAdminPage() {
                       <span className="text-xs text-foreground/50">
                         {s.duration > 0 ? `~${s.duration} min` : "add-on"}
                       </span>
+                      {!s.isActive && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-foreground/50">inactive</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-primary-dark">{formatPrice(s.price)}</span>
@@ -48,6 +53,7 @@ export default async function ServicesAdminPage() {
                         isPerNail={s.isPerNail}
                         isActive={s.isActive}
                       />
+                      <DeleteServiceButton serviceId={s.id} />
                     </div>
                   </li>
                 ))}
@@ -56,11 +62,7 @@ export default async function ServicesAdminPage() {
           </Card>
         ))}
 
-        <p className="text-sm text-foreground/50">
-          To add a new service, edit the seed data in{" "}
-          <code className="rounded bg-primary/10 px-1">prisma/seed.ts</code> and re-run{" "}
-          <code className="rounded bg-primary/10 px-1">npm run db:seed</code>.
-        </p>
+        <AddServiceForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
       </div>
     </div>
   );
