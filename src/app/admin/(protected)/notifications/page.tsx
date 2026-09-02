@@ -8,6 +8,7 @@ import {
   History,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { ClearNotificationsButton } from "@/components/admin/clear-notifications-button";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,11 @@ export default async function NotificationsPage() {
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5 text-accent" /> Notification History
           </CardTitle>
+          {recent.length > 0 && (
+            <div className="mt-1">
+              <ClearNotificationsButton />
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {recent.length === 0 ? (
