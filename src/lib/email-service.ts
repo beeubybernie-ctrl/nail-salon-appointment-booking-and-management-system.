@@ -1,40 +1,23 @@
 /**
- * Server-only email sending utilities.
- * This file must NOT be imported by client components — it uses nodemailer
- * which depends on Node.js built-ins (net, tls, fs, etc.).
+ * Server-only email sending via Resend HTTP API.
+ * Reliable on Vercel serverless (SMTP/Gmail cannot resolve DNS inside the
+ * function runtime). Uses fetch() so there are no Node-only built-ins.
+ *
+ * Configure via env:
+ *   RESEND_API_KEY   (Resend account secret key)
+ *   EMAIL_FROM       (verified sender, e.g. Bee-U by Bernie <onboarding@resend.dev>
+ *                     or a verified sender on your domain)
+ *   BUSINESS_EMAIL   (recipient for admin booking alerts)
  */
-import nodemailer from "nodemailer";
-
-const SMTP_HOST = (process.env.SMTP_HOST || "").trim();
-const SMTP_PORT = Number((process.env.SMTP_PORT || "465").trim() || 465);
-const SMTP_USER = (process.env.SMTP_USER || "").trim();
-const SMTP_PASS = (process.env.SMTP_PASS || "").trim();
-const SMTP_FROM = (process.env.SMTP_FROM || "").trim() || SMTP_USER;
-
-let _transporter: nodemailer.Transporter | null = null;
-
-function getTransporter(): nodemailer.Transporter | null {
-  if (_transporter) return _transporter;
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
-  _transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    requireTLS: SMTP_PORT === 587,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
-  return _transporter;
-}
+const RESEND_API_KEY = (process.env.RESEND_API_KEY || "").trim();
+const EMAIL_FROM = (process.env.EMAIL_FROM || "").trim() || "onboarding@resend.dev";
 
 export function isEmailConfigured(): boolean {
-  return !!(SMTP_HOST && SMTP_USER && SMTP_PASS);
+  return !!RESEND_API_KEY;
 }
 
 /**
- * Sends an email via configured SMTP. Returns "SENT" or "NOT_CONFIGURED".
+ * Sends an email via Resend HTTP API. Returns "SENT" or "NOT_CONFIGURED".
  * Never throws — errors are logged and swallowed so bookings still succeed.
  */
 export async function sendEmail(opts: {
@@ -43,35 +26,29 @@ export async function sendEmail(opts: {
   text: string;
   html?: string;
 }): Promise<"SENT" | "NOT_CONFIGURED"> {
-  const transporter = getTransporter();
-  if (!transporter) return "NOT_CONFIGURED";
+  if (!isEmailConfigured()) return "NOT_CONFIGURED";
 
-  const attempt = async () =>
-    transporter.sendMail({
-      from: SMTP_FROM,
-      to: opts.to,
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: EMAIL_FROM,
+      to: [opts.to],
       subject: opts.subject,
       text: opts.text,
-      html: opts.html,
-    });
+      ...(opts.html ? { html: opts.html } : {}),
+    }),
+  });
 
-  // Retry once on transient DNS/connection failures (common on Vercel serverless).
-  for (let i = 0; i < 2; i++) {
-    try {
-      await attempt();
-      return "SENT";
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      const isDns = /getaddrinfo|ENOTFOUND|ETIMEDOUT/i.test(msg) && i === 0;
-      if (!isDns) {
-        console.error("Failed to send email:", err);
-        return "NOT_CONFIGURED";
-      }
-      console.error("Email send failed, retrying once:", msg);
-      await new Promise((r) => setTimeout(r, 1500));
-    }
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    console.error("Resend send failed:", res.status, errText);
+    return "NOT_CONFIGURED";
   }
-  return "NOT_CONFIGURED";
+  return "SENT";
 }
 
 export interface EmailMessageData {
