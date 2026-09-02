@@ -4,6 +4,11 @@ import { requireAdmin } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { logNotification } from "@/lib/notifications-log";
 import { bookingConfirmedWhatsAppMessage, whatsappLink, toWhatsAppNumber } from "@/lib/notifications";
+import {
+  bookingConfirmedClientEmailHtml,
+  sendBookingEmail,
+} from "@/lib/email-service";
+import { sendWhatsAppMessage } from "@/lib/whatsapp-send";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +91,27 @@ export async function PATCH(
       subject: `Booking ${appointment.bookingRef} confirmed`,
       body: message,
     });
+
+    // Send the client a confirmation email.
+    const emailData = {
+      bookingRef: appointment.bookingRef,
+      serviceName: appointment.service.name,
+      date: dateLabel(appointment.date),
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      price: appointment.price,
+    };
+    await sendBookingEmail({
+      to: appointment.client.email,
+      subject: `Your Booking ${appointment.bookingRef} is Confirmed — Bee-U by Bernie`,
+      body: message,
+      html: bookingConfirmedClientEmailHtml(emailData),
+    });
+
+    // Send the client a WhatsApp confirmation.
+    if (clientNumber) {
+      await sendWhatsAppMessage(clientNumber, message);
+    }
 
     await logAudit(
       "APPOINTMENT_CONFIRMED",

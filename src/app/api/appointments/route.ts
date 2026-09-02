@@ -5,6 +5,14 @@ import { v4 as uuidv4 } from "uuid";
 import { logAudit } from "@/lib/audit";
 import { logNotification } from "@/lib/notifications-log";
 import { adminBookingRequestWhatsAppMessage } from "@/lib/notifications";
+import {
+  bookingRequestAdminEmailHtml,
+  sendBookingEmail,
+} from "@/lib/email-service";
+import {
+  sendWhatsAppMessage,
+  BUSINESS_NUMBER,
+} from "@/lib/whatsapp-send";
 import { BUSINESS } from "@/lib/business";
 import type { PrismaClient, Prisma } from "@prisma/client";
 
@@ -210,6 +218,30 @@ export async function POST(request: NextRequest) {
       subject: `New booking request ${appointment.bookingRef}`,
       body: requestMessage,
     });
+
+    // Send admin an email notification about the new booking request.
+    const emailData = {
+      bookingRef: appointment.bookingRef,
+      serviceName: appointment.service.name,
+      date: dateLabel,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      price: appointment.price,
+      clientName: appointment.client.name,
+      clientPhone: appointment.client.phone,
+      clientEmail: appointment.client.email,
+    };
+    await sendBookingEmail({
+      to: BUSINESS.email,
+      subject: `New Booking Request ${appointment.bookingRef} — Bee-U by Bernie`,
+      body: requestMessage,
+      html: bookingRequestAdminEmailHtml(emailData),
+    });
+
+    // Send the admin a WhatsApp notification about the new booking request.
+    if (BUSINESS_NUMBER) {
+      await sendWhatsAppMessage(BUSINESS_NUMBER, requestMessage);
+    }
 
     const dateISO = new Date(appointment.date);
 

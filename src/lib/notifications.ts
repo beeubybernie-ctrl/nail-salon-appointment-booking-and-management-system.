@@ -1,6 +1,7 @@
 import { BUSINESS } from "./business";
 
 const WHATSAPP_NUMBER = process.env.WHATSAPP_NUMBER || BUSINESS.whatsapp;
+const ADMIN_EMAIL = process.env.BUSINESS_EMAIL || BUSINESS.email;
 
 export function whatsappLink(
   message: string,
@@ -125,39 +126,30 @@ export function cancellationWhatsAppMessage(data: BookingMessageData): string {
 }
 
 /**
- * Sends an email notification via a configurable provider.
- * If no provider is configured, returns { sent: false, reason: "NOT_CONFIGURED" }
- * Never pretends to have sent a message.
+ * Builds a mailto: link that opens the admin's email client pre-filled
+ * with the booking request. Always works — no provider needed.
  */
-export async function sendEmail(options: {
-  to: string;
-  subject: string;
-  body: string;
-}): Promise<{ sent: boolean; reason?: string }> {
-  const provider = process.env.EMAIL_PROVIDER;
-  const apiKey = process.env.EMAIL_API_KEY;
-
-  if (!provider || !apiKey) {
-    return { sent: false, reason: "NOT_CONFIGURED" };
-  }
-
-  try {
-    const res = await fetch(`https://api.${provider}.com/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(options),
-    });
-
-    if (!res.ok) {
-      return { sent: false, reason: "PROVIDER_ERROR" };
-    }
-    return { sent: true };
-  } catch {
-    return { sent: false, reason: "PROVIDER_ERROR" };
-  }
+export function adminBookingRequestMailtoLink(data: BookingMessageData & { clientName?: string; clientEmail?: string; clientPhone?: string }): string {
+  const subject = encodeURIComponent(`New Booking Request ${data.bookingRef} — Bee-U by Bernie`);
+  const body = encodeURIComponent(
+    [
+      "NEW BOOKING REQUEST — Bee-U by Bernie",
+      "",
+      `Reference: ${data.bookingRef}`,
+      `Client: ${data.clientName || "N/A"}`,
+      `Phone: ${data.clientPhone || "N/A"}`,
+      `Email: ${data.clientEmail || "N/A"}`,
+      `Service: ${data.serviceName}`,
+      `Date: ${data.date}`,
+      `Time: ${data.startTime} - ${data.endTime}`,
+      `Price: R${data.price}`,
+      "",
+      "Please confirm this booking as soon as possible.",
+      "",
+      "Be You. Be Beautiful.",
+    ].join("\n")
+  );
+  return `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
 }
 
 /**
