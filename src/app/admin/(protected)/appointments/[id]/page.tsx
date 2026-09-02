@@ -8,8 +8,9 @@ import { DeleteAppointmentButton } from "@/components/admin/appointment-delete-b
 import { DeleteInspoImageButton } from "@/components/admin/delete-inspo-image-button";
 import { whatsappLink } from "@/lib/notifications";
 import { whatsappClientLink } from "@/lib/whatsapp-client";
+import { clientConfirmWhatsAppLink } from "@/lib/whatsapp-confirm";
 import Link from "next/link";
-import { ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Camera, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,23 @@ export default async function AppointmentDetailPage({
     price: appointment.price,
   });
 
+  const confirmWaLink =
+    appointment.status === "CONFIRMED"
+      ? clientConfirmWhatsAppLink({
+          bookingRef: appointment.bookingRef,
+          serviceName: appointment.service.name,
+          date: new Date(appointment.date).toLocaleDateString("en-ZA", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }),
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          price: appointment.price,
+          phone: appointment.client.phone || "",
+        })
+      : null;
+
   return (
     <div className="p-4 sm:p-6">
       <Link
@@ -71,6 +89,17 @@ export default async function AppointmentDetailPage({
             appointmentId={appointment.id}
             status={appointment.status}
           />
+          {confirmWaLink && (
+            <a
+              href={confirmWaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Send WhatsApp confirmation to client"
+              className="inline-flex items-center gap-1 rounded-md bg-[#25a85c] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1f9a50]"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> WA Confirm
+            </a>
+          )}
           <DeleteAppointmentButton appointmentId={appointment.id} />
         </div>
       </div>

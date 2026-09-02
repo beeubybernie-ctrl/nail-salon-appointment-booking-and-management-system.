@@ -3,9 +3,10 @@ import { formatPrice, formatTime24to12 } from "@/lib/business";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import Link from "next/link";
-import { CalendarClock, BellRing } from "lucide-react";
+import { CalendarClock, BellRing, MessageCircle } from "lucide-react";
 import { DeleteAppointmentButton } from "@/components/admin/appointment-delete-button";
 import { ConfirmAppointmentButton } from "@/components/admin/confirm-appointment-button";
+import { clientConfirmWhatsAppLink } from "@/lib/whatsapp-confirm";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +126,33 @@ export default async function AppointmentsPage({
                           variant="success"
                         />
                       )}
+                      {a.status === "CONFIRMED" &&
+                        (() => {
+                          const link = clientConfirmWhatsAppLink({
+                            bookingRef: a.bookingRef,
+                            serviceName: a.service.name,
+                            date: new Date(a.date).toLocaleDateString("en-ZA", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }),
+                            startTime: a.startTime,
+                            endTime: a.endTime,
+                            price: a.price,
+                            phone: a.client.phone || "",
+                          });
+                          return link ? (
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Send WhatsApp confirmation to client"
+                              className="inline-flex h-8 items-center gap-1 px-2 text-xs font-medium text-[#25a85c] hover:underline"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" /> WA Confirm
+                            </a>
+                          ) : null;
+                        })()}
                       <DeleteAppointmentButton appointmentId={a.id} className="h-8 px-2 text-xs" />
                     </div>
                   </td>
