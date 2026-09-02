@@ -69,6 +69,8 @@ model Appointment {
   price           Int
   status          String   @default("CONFIRMED")
   notes           String?
+  inspoImage      String?
+  inspoImageName  String?
   cancelToken     String   @unique
   rescheduleToken String   @unique
   createdAt       DateTime @default(now())

@@ -5,10 +5,11 @@ import { StatusBadge } from "@/components/ui/badge";
 import { formatPrice, formatTime24to12 } from "@/lib/business";
 import { AppointmentActions } from "@/components/admin/appointment-actions";
 import { DeleteAppointmentButton } from "@/components/admin/appointment-delete-button";
+import { DeleteInspoImageButton } from "@/components/admin/delete-inspo-image-button";
 import { whatsappLink } from "@/lib/notifications";
 import { whatsappClientLink } from "@/lib/whatsapp-client";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -127,6 +128,35 @@ export default async function AppointmentDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {appointment.inspoImage && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-accent" /> Client Inspiration Photo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={appointment.inspoImage}
+              alt={appointment.inspoImageName || "Client inspiration photo"}
+              className="max-h-80 rounded-xl object-contain ring-1 ring-primary/20"
+            />
+            <div className="flex flex-col items-start gap-2">
+              {appointment.inspoImageName && (
+                <p className="text-sm text-foreground/60">
+                  {appointment.inspoImageName}
+                </p>
+              )}
+              <p className="text-sm text-foreground/60">
+                The client uploaded this as inspiration for their nails.
+              </p>
+              <DeleteInspoImageButton appointmentId={appointment.id} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <a href={waLink} target="_blank" rel="noopener noreferrer">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   CalendarHeart,
@@ -15,6 +15,8 @@ import {
   Phone,
   Mail,
   StickyNote,
+  ImagePlus,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,7 +93,14 @@ export function BookingWizard() {
   const [overview, setOverview] = useState<Record<string, AvailabilityDay>>({});
   const [loadingOverview, setLoadingOverview] = useState(false);
 
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [form, setForm] = useState<{
+    name: string;
+    phone: string;
+    email: string;
+    notes: string;
+    inspoImage: string;
+    inspoImageName: string;
+  }>({ name: "", phone: "", email: "", notes: "", inspoImage: "", inspoImageName: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [booking, setBooking] = useState(false);
@@ -153,7 +162,8 @@ export function BookingWizard() {
     setPerNailQuantities({});
     setSelectedDate("");
     setSelectedSlot(null);
-    setStep("date");
+    // Stay on the service step so the client can choose optional extras
+    // before continuing to the calendar.
     loadOverview();
     if (cats.length === 0) {
       router.replace("/book");
@@ -283,6 +293,8 @@ export function BookingWizard() {
           phone: form.phone.trim(),
           email: form.email.trim(),
           notes: form.notes.trim(),
+          inspoImage: form.inspoImage || undefined,
+          inspoImageName: form.inspoImageName || undefined,
         }),
       });
       const data = await res.json();
@@ -407,6 +419,9 @@ export function BookingWizard() {
             form={form}
             errors={formErrors}
             onChange={(field, value) => setForm((p) => ({ ...p, [field]: value }))}
+            onInspoImage={() => {
+              setForm((p) => ({ ...p, inspoImage: "", inspoImageName: "" }));
+            }}
             onBack={() => setStep(selectedSlot ? "time" : "date")}
             onContinue={() => setStep("summary")}
           />
@@ -797,13 +812,72 @@ function TimeStep(props: {
 
 /* ------------------------------ Details ------------------------------ */
 
+function downscaleImage(file: File, maxDim: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("canvas failed"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function DetailsStep(props: {
-  form: { name: string; phone: string; email: string; notes: string };
+  form: {
+    name: string;
+    phone: string;
+    email: string;
+    notes: string;
+    inspoImage: string;
+    inspoImageName: string;
+  };
   errors: Record<string, string>;
   onChange: (field: string, value: string) => void;
+  onInspoImage: () => void;
   onBack: () => void;
   onContinue: () => void;
 }) {
+  const inspoFileRef = useRef<HTMLInputElement>(null);
+  const [inspoError, setInspoError] = useState("");
+
+  async function handleInspoFile(file: File | undefined) {
+    setInspoError("");
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setInspoError("Please choose an image file (JPG, PNG, etc.).");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setInspoError("Please choose an image smaller than 10 MB.");
+      return;
+    }
+    try {
+      const dataUrl = await downscaleImage(file, 1000);
+      props.onChange("inspoImage", dataUrl);
+      props.onChange("inspoImageName", file.name);
+    } catch {
+      setInspoError("Sorry, we couldn't read that image. Please try another.");
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -864,6 +938,55 @@ function DetailsStep(props: {
           </div>
           {props.errors.email && (
             <p className="mt-1 text-xs text-red-600">{props.errors.email}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="inquire" className="mb-1.5 flex items-center gap-1">
+            Inspiration Photo <span className="text-xs font-normal text-foreground/50">(optional)</span>
+          </Label>
+          <input
+            ref={inspoFileRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => {
+              handleInspoFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          {props.form.inspoImage ? (
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={props.form.inspoImage}
+                alt="Inspiration preview"
+                className="h-16 w-16 rounded-xl object-cover ring-1 ring-primary/20"
+              />
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-foreground/60">
+                  {props.form.inspoImageName || "Inspiration photo"}
+                </p>
+                <button
+                  type="button"
+                  onClick={props.onInspoImage}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Remove photo
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => inspoFileRef.current?.click()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-5 text-sm text-foreground/60 transition hover:border-primary/50 hover:bg-primary/10"
+            >
+              <ImagePlus className="h-5 w-5" /> Upload a photo of the nails you&apos;d like (optional)
+            </button>
+          )}
+          {inspoError && (
+            <p className="mt-1 text-xs text-red-600">{inspoError}</p>
           )}
         </div>
 

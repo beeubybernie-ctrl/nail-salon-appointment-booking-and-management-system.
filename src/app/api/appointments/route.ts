@@ -36,6 +36,8 @@ const bookingSchema = z.object({
   phone: z.string().trim().min(7, "Please enter a valid cellphone number"),
   email: z.string().trim().email("Please enter a valid email address"),
   notes: z.string().trim().max(500).optional().default(""),
+  inspoImage: z.string().max(3_000_000).optional(),
+  inspoImageName: z.string().max(255).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { serviceId, extras, date, startTime, name, phone, email, notes } =
+  const { serviceId, extras, date, startTime, name, phone, email, notes, inspoImage, inspoImageName } =
     parsed.data;
 
   const dateStart = new Date(`${date}T00:00:00`);
@@ -151,6 +153,8 @@ export async function POST(request: NextRequest) {
           price: totalPrice + extraTotal,
           status: "PENDING",
           notes: notes || null,
+          inspoImage: inspoImage || null,
+          inspoImageName: inspoImageName || null,
           cancelToken: uuidv4(),
           rescheduleToken: uuidv4(),
           extras: {
