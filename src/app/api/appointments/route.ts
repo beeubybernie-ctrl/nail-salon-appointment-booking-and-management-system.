@@ -255,9 +255,9 @@ export async function POST(request: NextRequest) {
       },
       adminContactMessage: requestMessage,
       cancelLink:
-        `${process.env.NEXT_PUBLIC_APP_URL || ""}/cancel/${appointment.cancelToken}`,
+        `${(process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "")}/cancel/${appointment.cancelToken}`,
       rescheduleLink:
-        `${process.env.NEXT_PUBLIC_APP_URL || ""}/reschedule/${appointment.rescheduleToken}`,
+        `${(process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "")}/reschedule/${appointment.rescheduleToken}`,
     });
   } catch (error) {
     console.error("Booking error:", error);

@@ -11,6 +11,7 @@
  */
 const RESEND_API_KEY = (process.env.RESEND_API_KEY || "").trim();
 const EMAIL_FROM = (process.env.EMAIL_FROM || "").trim() || "onboarding@resend.dev";
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app").trim().replace(/\/+$/, "");
 
 export function isEmailConfigured(): boolean {
   return !!RESEND_API_KEY;
@@ -98,7 +99,7 @@ export function bookingRequestAdminEmailHtml(data: EmailMessageData & { clientNa
           Log in to your admin dashboard to confirm or decline this booking.
         </p>
         <p style="margin: 16px 0 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app"}/admin/login"
+          <a href="${APP_URL}/admin/login"
              style="display:inline-block; background:#b8860b; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600;">
             Sign In to Admin Portal
           </a>
