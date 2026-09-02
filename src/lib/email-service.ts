@@ -98,9 +98,9 @@ export function bookingRequestAdminEmailHtml(data: EmailMessageData & { clientNa
           Log in to your admin dashboard to confirm or decline this booking.
         </p>
         <p style="margin: 16px 0 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app"}/admin/appointments?filter=pending"
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app"}/admin"
              style="display:inline-block; background:#b8860b; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600;">
-            View Pending Requests
+            Go to Admin Portal
           </a>
         </p>
         <p style="margin: 24px 0 0; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 16px;">
