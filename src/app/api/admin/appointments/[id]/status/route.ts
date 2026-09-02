@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import { logNotification } from "@/lib/notifications-log";
+import { bookingConfirmedWhatsAppMessage, whatsappLink, toWhatsAppNumber } from "@/lib/notifications";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,15 @@ export const dynamic = "force-dynamic";
 const statusSchema = z.object({
   status: z.enum(["CONFIRMED", "PENDING", "COMPLETED", "CANCELLED", "NO_SHOW"]),
 });
+
+function dateLabel(date: Date): string {
+  return new Date(date).toLocaleDateString("en-ZA", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -36,7 +47,10 @@ export async function PATCH(
     );
   }
 
-  const appointment = await prisma.appointment.findUnique({ where: { id } });
+  const appointment = await prisma.appointment.findUnique({
+    where: { id },
+    include: { client: true, service: true },
+  });
   if (!appointment) {
     return NextResponse.json({ error: "Appointment not found." }, { status: 404 });
   }
@@ -45,6 +59,41 @@ export async function PATCH(
     where: { id },
     data: { status: parsed.data.status },
   });
+
+  let clientWhatsAppLink: string | null = null;
+  let clientMessage: string | null = null;
+
+  // When an admin confirms a PENDING request, prepare the WhatsApp confirmation
+  // link they can open to message the client, and record a notification.
+  const isConfirm = parsed.data.status === "CONFIRMED" && appointment.status === "PENDING";
+  if (isConfirm) {
+    const message = bookingConfirmedWhatsAppMessage({
+      bookingRef: appointment.bookingRef,
+      serviceName: appointment.service.name,
+      date: dateLabel(appointment.date),
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      price: appointment.price,
+    });
+    clientMessage = message;
+
+    const clientNumber = toWhatsAppNumber(appointment.client.phone || "");
+    clientWhatsAppLink = clientNumber ? whatsappLink(message, clientNumber) : null;
+
+    await logNotification({
+      type: "BOOKING_CONFIRMED",
+      recipient: appointment.client.phone || "client",
+      subject: `Booking ${appointment.bookingRef} confirmed`,
+      body: message,
+    });
+
+    await logAudit(
+      "APPOINTMENT_CONFIRMED",
+      "Appointment",
+      id,
+      `Request ${appointment.bookingRef} confirmed by admin`
+    );
+  }
 
   await logAudit(
     `APPOINTMENT_STATUS_${parsed.data.status}`,
@@ -55,5 +104,7 @@ export async function PATCH(
 
   return NextResponse.json({
     appointment: { id: updated.id, status: updated.status },
+    clientWhatsAppLink,
+    clientMessage,
   });
 }

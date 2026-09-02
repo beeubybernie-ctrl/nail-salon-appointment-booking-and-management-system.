@@ -3,16 +3,29 @@ import { formatPrice, formatTime24to12 } from "@/lib/business";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import Link from "next/link";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, BellRing } from "lucide-react";
 import { DeleteAppointmentButton } from "@/components/admin/appointment-delete-button";
+import { ConfirmAppointmentButton } from "@/components/admin/confirm-appointment-button";
 
 export const dynamic = "force-dynamic";
 
-export default async function AppointmentsPage() {
+export default async function AppointmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter } = await searchParams;
+  const showPending = filter === "pending";
+
   const appointments = await prisma.appointment.findMany({
     include: { client: true, service: true },
+    where: showPending ? { status: "PENDING" } : undefined,
     orderBy: [{ date: "desc" }, { startTime: "asc" }],
   });
+
+  const pendingCount = showPending
+    ? appointments.length
+    : await prisma.appointment.count({ where: { status: "PENDING" } });
 
   function formatDate(d: Date) {
     return new Date(d).toLocaleDateString("en-ZA", {
@@ -40,6 +53,30 @@ export default async function AppointmentsPage() {
         </Link>
       </div>
 
+      {pendingCount > 0 && (
+        <Link
+          href={showPending ? "/admin/appointments" : "/admin/appointments?filter=pending"}
+          className="mb-5 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 hover:bg-amber-100"
+        >
+          <BellRing className="h-5 w-5" />
+          <span>
+            {showPending ? (
+              <>
+                Showing <strong>{pendingCount}</strong> booking{" "}
+                {pendingCount === 1 ? "request" : "requests"}.
+                Click to view all appointments.
+              </>
+            ) : (
+              <>
+                <strong>{pendingCount}</strong> booking{" "}
+                {pendingCount === 1 ? "request" : "requests"} awaiting your
+                confirmation. Click to review.
+              </>
+            )}
+          </span>
+        </Link>
+      )}
+
       {appointments.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 p-10 text-center">
@@ -61,7 +98,7 @@ export default async function AppointmentsPage() {
                 <th className="p-3">Service</th>
                 <th className="p-3">Price</th>
                 <th className="p-3">Status</th>
-                <th className="p-3"></th>
+                <th className="p-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-primary/10">
@@ -80,7 +117,16 @@ export default async function AppointmentsPage() {
                   <td className="p-3 font-medium">{formatPrice(a.price)}</td>
                   <td className="p-3"><StatusBadge status={a.status} /></td>
                   <td className="p-3">
-                    <DeleteAppointmentButton appointmentId={a.id} className="h-8 px-2 text-xs" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      {a.status === "PENDING" && (
+                        <ConfirmAppointmentButton
+                          appointmentId={a.id}
+                          size="sm"
+                          variant="success"
+                        />
+                      )}
+                      <DeleteAppointmentButton appointmentId={a.id} className="h-8 px-2 text-xs" />
+                    </div>
                   </td>
                 </tr>
               ))}

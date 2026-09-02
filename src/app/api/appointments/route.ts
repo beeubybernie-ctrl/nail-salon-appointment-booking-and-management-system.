@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { logAudit } from "@/lib/audit";
+import { logNotification } from "@/lib/notifications-log";
+import { adminBookingRequestWhatsAppMessage } from "@/lib/notifications";
+import { BUSINESS } from "@/lib/business";
 import type { PrismaClient, Prisma } from "@prisma/client";
 
 type AppointmentCreate = Prisma.AppointmentGetPayload<{
@@ -146,7 +149,7 @@ export async function POST(request: NextRequest) {
           endTime,
           duration,
           price: totalPrice + extraTotal,
-          status: "CONFIRMED",
+          status: "PENDING",
           notes: notes || null,
           cancelToken: uuidv4(),
           rescheduleToken: uuidv4(),
@@ -176,11 +179,35 @@ export async function POST(request: NextRequest) {
     }
 
     await logAudit(
-      "APPOINTMENT_CREATED",
+      "APPOINTMENT_REQUESTED",
       "Appointment",
       appointment.id,
-      `Booking ${appointment.bookingRef} created by client`
+      `Request ${appointment.bookingRef} submitted by client (pending approval)`
     );
+
+    // Record an in-app notification for the admin about the new request.
+    const dateLabel = dateStart.toLocaleDateString("en-ZA", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    const requestMessage = adminBookingRequestWhatsAppMessage({
+      bookingRef: appointment.bookingRef,
+      serviceName: appointment.service.name,
+      date: dateLabel,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      price: appointment.price,
+    });
+    await logNotification({
+      type: "BOOKING_REQUEST",
+      recipient: "admin",
+      subject: `New booking request ${appointment.bookingRef}`,
+      body: requestMessage,
+    });
+
+    const dateISO = new Date(appointment.date);
 
     return NextResponse.json({
       appointment: {
@@ -199,6 +226,7 @@ export async function POST(request: NextRequest) {
         price: appointment.price,
         status: appointment.status,
       },
+      adminContactMessage: requestMessage,
       cancelLink:
         `${process.env.NEXT_PUBLIC_APP_URL || ""}/cancel/${appointment.cancelToken}`,
       rescheduleLink:

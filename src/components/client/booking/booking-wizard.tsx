@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Loader2,
   Sparkles,
-  PartyPopper,
   Calendar as CalendarIcon,
   MessageCircle,
   User,
@@ -23,7 +22,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatPrice, formatTime24to12 } from "@/lib/business";
-import { whatsappLink, bookingWhatsAppMessage } from "@/lib/notifications";
+import { whatsappLink, bookingRequestSubmittedSummary } from "@/lib/notifications";
 
 interface AvailabilityDay {
   date: string;
@@ -1013,7 +1012,7 @@ function ConfirmationScreen({
     year: "numeric",
   });
 
-  const waMessage = bookingWhatsAppMessage({
+  const waMessage = bookingRequestSubmittedSummary({
     bookingRef: result.bookingRef,
     serviceName: result.serviceName,
     date: dateLabel,
@@ -1022,44 +1021,25 @@ function ConfirmationScreen({
     price: result.price,
   });
 
-  function addToCalendar() {
-    const startISO = new Date(result.date);
-    const [sh, sm] = result.startTime.split(":").map(Number);
-    startISO.setHours(sh, sm, 0, 0);
-    const endISO = new Date(startISO.getTime());
-    const [eh, em] = result.endTime.split(":").map(Number);
-    endISO.setHours(eh, em, 0, 0);
-
-    const fmt = (d: Date) => {
-      const p = (n: number) => n.toString().padStart(2, "0");
-      return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}T${p(d.getHours())}${p(d.getMinutes())}00`;
-    };
-
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-      `Nails at Bee-U by Bernie - ${result.serviceName}`
-    )}&dates=${fmt(startISO)}/${fmt(endISO)}&details=${encodeURIComponent(
-      `Booking ref: ${result.bookingRef}\nBe You. Be Beautiful.`
-    )}&location=${encodeURIComponent("Bee-U by Bernie")}`;
-    window.open(url, "_blank");
-  }
-
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6">
       <div className="text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-          <PartyPopper className="h-10 w-10 text-green-600" />
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
+          <MessageCircle className="h-10 w-10 text-amber-600" />
         </div>
         <h1 className="mt-6 font-serif-display text-3xl font-semibold">
-          Appointment Confirmed!
+          Booking Request Sent!
         </h1>
-        <p className="mt-2 text-foreground/60">
-          Thank you, {result.clientName.split(" ")[0]}. We can&apos;t wait to see you.
-        </p>
+<p className="mx-auto mt-3 max-w-md text-foreground/70">
+                  Thank you, {result.clientName.split(" ")[0]}. Your booking
+                  request was sent successfully. We&apos;ll confirm your
+                  appointment shortly.
+                </p>
       </div>
 
       <Card className="mt-8">
         <CardContent className="space-y-3 p-6 text-sm">
-          <Row label="Booking Reference" value={result.bookingRef} strong />
+          <Row label="Request Reference" value={result.bookingRef} strong />
           <Row label="Service" value={result.serviceName} />
           {result.extraDetails.length > 0 && (
             <Row
@@ -1074,36 +1054,30 @@ function ConfirmationScreen({
             label="Time"
             value={`${formatTime24to12(result.startTime)} – ${formatTime24to12(result.endTime)}`}
           />
-          <Row label="Price" value={formatPrice(result.price)} strong />
+          <Row label="Estimated Price" value={formatPrice(result.price)} strong />
+          <Row label="Status" value="Pending approval" />
         </CardContent>
       </Card>
 
       <p className="mt-4 text-center text-xs text-foreground/50">
-        A secure cancellation link has been emailed to you. You can reschedule or
-        cancel anytime before your appointment.
+        Your appointment is not confirmed until we message you. Feel free to
+        contact us on WhatsApp if you have any questions.
       </p>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <Button
-          variant="outline"
-          onClick={addToCalendar}
-          className="w-full"
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" /> Add to Calendar
-        </Button>
+      <div className="mt-8 grid gap-3">
         <a
           href={whatsappLink(waMessage)}
           target="_blank"
           rel="noopener noreferrer"
         >
           <Button variant="whatsapp" className="w-full">
-            <MessageCircle className="mr-2 h-4 w-4" /> Send via WhatsApp
+            <MessageCircle className="mr-2 h-4 w-4" /> Message Us on WhatsApp
           </Button>
         </a>
         <Button
           variant="secondary"
           onClick={() => useRouterRouter.push("/book")}
-          className="w-full sm:col-span-2"
+          className="w-full"
         >
           <CalendarHeart className="mr-2 h-4 w-4" /> Book Another Appointment
         </Button>

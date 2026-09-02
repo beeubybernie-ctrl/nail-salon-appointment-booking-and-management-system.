@@ -5,13 +5,20 @@ import {
   CheckCircle2,
   XCircle,
   Bell,
+  History,
 } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default function NotificationsPage() {
+export default async function NotificationsPage() {
   const emailConfigured = !!(process.env.EMAIL_PROVIDER && process.env.EMAIL_API_KEY);
   const whatsappConfigured = !!(process.env.WHATSAPP_PROVIDER && process.env.WHATSAPP_API_KEY);
+
+  const recent = await prisma.notificationLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
 
   return (
     <div className="p-4 sm:p-6">
@@ -88,6 +95,43 @@ export default function NotificationsPage() {
             required to actually send reminders at the scheduled time. This is
             postponed until an email/WhatsApp/SMS provider is configured.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-accent" /> Notification History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recent.length === 0 ? (
+            <p className="text-sm text-foreground/60">
+              No notifications recorded yet. New booking requests and
+              confirmations will appear here.
+            </p>
+          ) : (
+            <ul className="divide-y divide-primary/10">
+              {recent.map((n) => (
+                <li key={n.id} className="py-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      {n.subject ?? n.type}
+                    </p>
+                    <span className="shrink-0 text-xs text-foreground/40">
+                      {n.createdAt.toLocaleString("en-ZA")}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-foreground/70">To: {n.recipient}</p>
+                  {n.body && (
+                    <pre className="mt-2 whitespace-pre-wrap rounded-md bg-muted/50 p-2 font-mono text-xs text-foreground/70">
+                      {n.body}
+                    </pre>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>

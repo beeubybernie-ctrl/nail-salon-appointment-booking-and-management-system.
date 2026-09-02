@@ -10,6 +10,28 @@ export function whatsappLink(
   return `https://wa.me/${target}?text=${encodeURIComponent(message)}`;
 }
 
+/**
+ * Normalises a South African phone number to international format (27xxxxxxxxx)
+ * so it can be passed to the client's wa.me link. Handles "+27 82...",
+ * "082...", "27...", and spaced formats. Falls back to the raw digits if unknown.
+ */
+export function toWhatsAppNumber(phone: string): string {
+  const digits = phone.replace(/[^\d+]/g, "");
+  if (digits.startsWith("+27")) {
+    return digits.replace(/^\+/, "");
+  }
+  if (digits.startsWith("27") && digits.length === 11) {
+    return digits;
+  }
+  if (digits.startsWith("0") && digits.length === 10) {
+    return `27${digits.slice(1)}`;
+  }
+  if (digits.length === 11 && digits.startsWith("27")) {
+    return digits;
+  }
+  return digits;
+}
+
 export function contactWhatsAppMessage(): string {
   return "Hello Bee-U by Bernie! I'd like to ask about a nail appointment.";
 }
@@ -34,6 +56,60 @@ export function bookingWhatsAppMessage(data: BookingMessageData): string {
     `Price: R${data.price}`,
     "",
     "Be You. Be Beautiful.",
+  ].join("\n");
+}
+
+/**
+ * Message shown to the client on the website after they submit a request.
+ */
+export function bookingRequestSubmittedSummary(data: BookingMessageData): string {
+  return [
+    "Bee-U by Bernie",
+    "",
+    `Booking Request Reference: ${data.bookingRef}`,
+    `Service: ${data.serviceName}`,
+    `Date: ${data.date}`,
+    `Time: ${data.startTime} - ${data.endTime}`,
+    `Estimated price: R${data.price}`,
+    "",
+    "We'll confirm shortly.",
+    "Be You. Be Beautiful.",
+  ].join("\n");
+}
+
+/**
+ * WhatsApp message the admin sends the client to confirm their booking.
+ */
+export function bookingConfirmedWhatsAppMessage(data: BookingMessageData): string {
+  return [
+    "Bee-U by Bernie",
+    "",
+    "Friendly reminder, your appointment is confirmed:",
+    "",
+    `Booking Reference: ${data.bookingRef}`,
+    `Service: ${data.serviceName}`,
+    `Date: ${data.date}`,
+    `Time: ${data.startTime} - ${data.endTime}`,
+    `Price: R${data.price}`,
+    "",
+    "We look forward to seeing you!",
+    "Be You. Be Beautiful.",
+  ].join("\n");
+}
+
+/**
+ * WhatsApp message pre-filled for the ADMIN so they can action a new request.
+ * Opens the admin's own WhatsApp with the client's request already typed out.
+ */
+export function adminBookingRequestWhatsAppMessage(data: BookingMessageData): string {
+  return [
+    "NEW BOOKING REQUEST - Bee-U by Bernie",
+    "",
+    `Reference: ${data.bookingRef}`,
+    `Service: ${data.serviceName}`,
+    `Date: ${data.date}`,
+    `Time: ${data.startTime} - ${data.endTime}`,
+    `Price: R${data.price}`,
   ].join("\n");
 }
 
