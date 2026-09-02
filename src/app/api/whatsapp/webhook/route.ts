@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "bee-u-bernie-verify";
+const RAW_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "";
+const VERIFY_TOKEN = RAW_VERIFY_TOKEN.trim() || "bee-u-bernie-verify";
 
 /**
  * GET — Meta's webhook verification handshake.
