@@ -17,6 +17,8 @@ import {
   StickyNote,
   ImagePlus,
   Trash2,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,6 +108,12 @@ export function BookingWizard() {
   const [booking, setBooking] = useState(false);
   const [bookingError, setBookingError] = useState("");
   const [result, setResult] = useState<AppointmentResult | null>(null);
+
+  // Scroll back to the top whenever the user changes steps, so mobile users
+  // don't land mid-page on the next form.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   // Load catalog
   useEffect(() => {
@@ -553,25 +561,61 @@ function ServiceStep(props: {
                         </button>
                         {selected && s.isPerNail && (
                           <div className="mt-2 flex items-center gap-2 px-1">
-                            <Label htmlFor={`qty-${s.id}`} className="text-xs">
-                              Nails:
-                            </Label>
-                            <Input
-                              id={`qty-${s.id}`}
-                              type="number"
-                              min={1}
-                              max={10}
-                              value={props.perNailQuantities[s.id] ?? 10}
-                              onChange={(e) =>
-                                props.onQtyChange(
-                                  s.id,
-                                  Math.max(1, Math.min(10, parseInt(e.target.value) || 1)),
-                                  s.name,
-                                  s.price
-                                )
-                              }
-                              className="h-9 w-20"
-                            />
+                            <span className="text-xs text-foreground/50">Nails:</span>
+                            <div className="flex items-center gap-1 rounded-lg border border-primary/20 bg-white p-1">
+                              <button
+                                type="button"
+                                aria-label="Fewer nails"
+                                onClick={() =>
+                                  props.onQtyChange(
+                                    s.id,
+                                    Math.max(1, (props.perNailQuantities[s.id] ?? 10) - 1),
+                                    s.name,
+                                    s.price
+                                  )
+                                }
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground/60 transition hover:bg-primary/10"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </button>
+                              <input
+                                id={`qty-${s.id}`}
+                                type="number"
+                                inputMode="numeric"
+                                min={1}
+                                max={10}
+                                value={props.perNailQuantities[s.id] ?? 10}
+                                onChange={(e) => {
+                                  const raw = e.target.value;
+                                  if (raw === "") {
+                                    props.onQtyChange(s.id, 1, s.name, s.price);
+                                    return;
+                                  }
+                                  props.onQtyChange(
+                                    s.id,
+                                    Math.max(1, Math.min(10, parseInt(raw, 10) || 1)),
+                                    s.name,
+                                    s.price
+                                  );
+                                }}
+                                className="h-8 w-12 rounded-md border-0 text-center text-sm font-medium focus:outline-none focus:ring-0"
+                              />
+                              <button
+                                type="button"
+                                aria-label="More nails"
+                                onClick={() =>
+                                  props.onQtyChange(
+                                    s.id,
+                                    Math.min(10, (props.perNailQuantities[s.id] ?? 10) + 1),
+                                    s.name,
+                                    s.price
+                                  )
+                                }
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground/60 transition hover:bg-primary/10"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                            </div>
                             <span className="text-xs text-foreground/50">
                               +{formatPrice(s.price * (props.perNailQuantities[s.id] ?? 10))}
                             </span>
