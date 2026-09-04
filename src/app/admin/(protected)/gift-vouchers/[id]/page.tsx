@@ -91,6 +91,8 @@ export default async function VoucherDetailPage({
                   value={validUntilStr}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
+                  width="25%"
+                  alignRight
                   className="text-lg"
                 />
               </div>
@@ -162,16 +164,25 @@ function FieldOverlay({
   x,
   y,
   className,
+  width,
+  alignRight,
 }: {
   value: string;
   x: number;
   y: number;
   className?: string;
+  width?: string;
+  alignRight?: boolean;
 }) {
   return (
     <div
       className="absolute"
-      style={{ left: `${x}%`, top: `${y}%` }}
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        width: width ?? "auto",
+        textAlign: alignRight ? "right" : "left",
+      }}
     >
       <p className={`text-sm font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
     </div>
