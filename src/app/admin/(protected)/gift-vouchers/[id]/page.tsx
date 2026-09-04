@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
@@ -67,34 +68,40 @@ export default async function VoucherDetailPage({
                   value={voucherAmountLabel(amount)}
                   x={layout.amount.x}
                   y={layout.amount.y}
-                  className="text-right text-lg font-bold"
+                  size={layout.amount.size}
+                  font={layout.amount.font}
+                  alignRight
                 />
                 <FieldOverlay
                   value={voucher.recipientName}
                   x={layout.to.x}
                   y={layout.to.y}
-                  className="text-lg"
+                  size={layout.to.size}
+                  font={layout.to.font}
                 />
                 {voucher.buyerName && (
                   <FieldOverlay
                     value={voucher.buyerName}
                     x={layout.from.x}
                     y={layout.from.y}
-                    className="text-lg"
+                    size={layout.from.size}
+                    font={layout.from.font}
                   />
                 )}
                 <FieldOverlay
                   value={`${voucher.voucherNo}`}
                   x={layout.voucherNo.x}
                   y={layout.voucherNo.y}
-                  className="font-mono text-sm font-bold"
+                  size={layout.voucherNo.size}
+                  font={layout.voucherNo.font}
                 />
                 <FieldOverlay
                   value=""
                   dateParts={validUntilParts(voucher.validUntil)}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
-                  className="text-base"
+                  size={layout.validUntil.size}
+                  font={layout.validUntil.font}
                 />
               </div>
             </div>
@@ -165,7 +172,8 @@ function FieldOverlay({
   dateParts,
   x,
   y,
-  className,
+  size,
+  font,
   width,
   alignRight,
 }: {
@@ -173,10 +181,15 @@ function FieldOverlay({
   dateParts?: { day: string; month: string; year: string };
   x: number;
   y: number;
-  className?: string;
+  size: number;
+  font: string;
   width?: string;
   alignRight?: boolean;
 }) {
+  const textStyle: CSSProperties = {
+    fontSize: `${size}px`,
+    fontFamily: font === "mono" ? "ui-monospace, monospace" : "inherit",
+  };
   return (
     <div
       className="absolute"
@@ -188,7 +201,7 @@ function FieldOverlay({
       }}
     >
       {dateParts ? (
-        <p className={`flex items-center font-semibold text-primary-dark ${className ?? ""}`}>
+        <p className="flex items-center text-primary-dark" style={textStyle}>
           <span>{dateParts.day}</span>
           <span className="mx-[8px]">/</span>
           <span>{dateParts.month}</span>
@@ -196,7 +209,7 @@ function FieldOverlay({
           <span>{dateParts.year}</span>
         </p>
       ) : (
-        <p className={`font-semibold text-primary-dark ${className ?? ""}`}>{value}</p>
+        <p className="text-primary-dark" style={textStyle}>{value}</p>
       )}
     </div>
   );

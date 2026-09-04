@@ -13,11 +13,11 @@ const PAGE_W = 595; // A4 portrait
 const PAGE_H = 842;
 
 const DEFAULT_LAYOUT: VoucherLayout = {
-  amount: { x: 75, y: 5 },
-  to: { x: 30, y: 40 },
-  from: { x: 30, y: 55 },
-  voucherNo: { x: 5, y: 85 },
-  validUntil: { x: 70, y: 85 },
+  amount: { x: 75, y: 5, size: 18, font: "sans" },
+  to: { x: 30, y: 40, size: 18, font: "sans" },
+  from: { x: 30, y: 55, size: 18, font: "sans" },
+  voucherNo: { x: 5, y: 85, size: 14, font: "mono" },
+  validUntil: { x: 70, y: 85, size: 16, font: "sans" },
 };
 
 function escapeText(s: string): string {
@@ -208,50 +208,43 @@ export function buildVoucherTicketPdf(x: {
     draw.push(`0 0 ${W} ${H} re f`);
   }
 
-  // Overlay values on the template — gold color to match view
+  // Overlay values on the template — gold color to match view, regular font
   const GOLD = "0.65 0.49 0.31 rg";
 
-  // Amount (uppercase label exists on template, draw only the value)
-  const amountStr = voucherAmountLabel(x.amount);
-  const amtX = px(layout.amount.x);
-  const amtY = py(layout.amount.y) + 18 * 0.8;
-  draw.push(`BT /F2 18 Tf ${GOLD} ${amtX} ${H_(amtY)} Td (${escapeText(amountStr)}) Tj ET`);
+  // helper to draw a single line of text
+  const reg = (font: number, size: number, xp: number, yp: number, str: string) =>
+    `BT /F${font} ${size} Tf ${GOLD} ${xp} ${H_(yp)} Td (${escapeText(str)}) Tj ET`;
+
+  // Amount
+  draw.push(reg(1, layout.amount.size, px(layout.amount.x), py(layout.amount.y) + layout.amount.size * 0.8, voucherAmountLabel(x.amount)));
 
   // To
-  const toX = px(layout.to.x);
-  const toY = py(layout.to.y) + 18 * 0.8;
-  draw.push(`BT /F2 18 Tf ${GOLD} ${toX} ${H_(toY)} Td (${escapeText(x.recipientName)}) Tj ET`);
+  draw.push(reg(1, layout.to.size, px(layout.to.x), py(layout.to.y) + layout.to.size * 0.8, x.recipientName));
 
   // From
   if (x.buyerName) {
-    const fX = px(layout.from.x);
-    const fY = py(layout.from.y) + 18 * 0.8;
-    draw.push(`BT /F2 18 Tf ${GOLD} ${fX} ${H_(fY)} Td (${escapeText(x.buyerName)}) Tj ET`);
+    draw.push(reg(1, layout.from.size, px(layout.from.x), py(layout.from.y) + layout.from.size * 0.8, x.buyerName));
   }
 
   // Voucher no
-  const vX = px(layout.voucherNo.x);
-  const vY = py(layout.voucherNo.y) + 14 * 0.8;
-  draw.push(`BT /F1 14 Tf ${GOLD} ${vX} ${H_(vY)} Td (${escapeText(x.voucherNo)}) Tj ET`);
+  draw.push(reg(1, layout.voucherNo.size, px(layout.voucherNo.x), py(layout.voucherNo.y) + layout.voucherNo.size * 0.8, x.voucherNo));
 
-  // Valid until — day / month / year with a small gap (scaled to ticket)
+  // Valid until — draw day / month / year using RELATIVE Td offsets so each
+  // segment lands correctly (Td is relative to the current text position).
   const parts = validUntilParts(x.validUntil);
+  const dSize = layout.validUntil.size;
   const dX = px(layout.validUntil.x);
-  const dY = py(layout.validUntil.y) + 16 * 0.8;
-  const seg = 34; // approx width of a "dd" segment at 16pt in PDF points
-  const slash = 14;
-  let cursor = dX;
-  draw.push(`BT /F2 16 Tf ${GOLD}`);
-  draw.push(`${cursor} ${H_(dY)} Td (${parts.day}) Tj`);
-  cursor += seg + slash;
-  draw.push(`${cursor} ${H_(dY)} Td (/) Tj`);
-  cursor += slash + seg + slash;
-  draw.push(`${cursor} ${H_(dY)} Td (${parts.month}) Tj`);
-  cursor += seg + slash;
-  draw.push(`${cursor} ${H_(dY)} Td (/) Tj`);
-  cursor += slash + seg + slash;
-  draw.push(`${cursor} ${H_(dY)} Td (${parts.year}) Tj`);
+  const dY = py(layout.validUntil.y) + dSize * 0.8;
+  const tdv = `0 ${H_(dY)} Td`;
+  const seg = dSize; // approx width of a "dd" segment
+  const slash = 10; // small gap + slash
+  draw.push(`BT /F1 ${dSize} Tf ${GOLD} ${dX} ${H_(dY)} Td (${parts.day}) Tj`);
+  draw.push(`${seg + slash} 0 Td (/) Tj`);
+  draw.push(`${slash + seg + slash} 0 Td (${parts.month}) Tj`);
+  draw.push(`${seg + slash} 0 Td (/) Tj`);
+  draw.push(`${slash + seg + slash} 0 Td (${parts.year}) Tj`);
   draw.push(`ET`);
+  void tdv;
 
   const contentBody = draw.join("\n");
 

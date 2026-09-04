@@ -6,6 +6,8 @@ export const VOUCHER_VALIDITY_MONTHS = 3;
 export interface FieldPos {
   x: number;
   y: number;
+  size: number;
+  font: string;
 }
 
 export interface VoucherLayout {
@@ -17,18 +19,30 @@ export interface VoucherLayout {
 }
 
 const DEFAULT_LAYOUT: VoucherLayout = {
-  amount: { x: 75, y: 5 },
-  to: { x: 30, y: 40 },
-  from: { x: 30, y: 55 },
-  voucherNo: { x: 5, y: 85 },
-  validUntil: { x: 70, y: 85 },
+  amount: { x: 75, y: 5, size: 18, font: "sans" },
+  to: { x: 30, y: 40, size: 18, font: "sans" },
+  from: { x: 30, y: 55, size: 18, font: "sans" },
+  voucherNo: { x: 5, y: 85, size: 14, font: "mono" },
+  validUntil: { x: 70, y: 85, size: 16, font: "sans" },
 };
 
 export async function getVoucherLayout(): Promise<VoucherLayout> {
   const setting = await prisma.setting.findUnique({ where: { key: "voucherLayout" } });
   if (!setting) return DEFAULT_LAYOUT;
   try {
-    return { ...DEFAULT_LAYOUT, ...JSON.parse(setting.value) };
+    const parsed = JSON.parse(setting.value);
+    const merge = {} as VoucherLayout;
+    (Object.keys(DEFAULT_LAYOUT) as (keyof VoucherLayout)[]).forEach((k) => {
+      const d = DEFAULT_LAYOUT[k];
+      const p = parsed[k] ?? {};
+      merge[k] = {
+        x: p.x ?? d.x,
+        y: p.y ?? d.y,
+        size: p.size ?? d.size,
+        font: p.font ?? d.font,
+      };
+    });
+    return merge;
   } catch {
     return DEFAULT_LAYOUT;
   }
