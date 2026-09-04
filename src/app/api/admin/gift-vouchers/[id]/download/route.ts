@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { buildVoucherTicketPdf } from "@/lib/pdf";
+import { getVoucherLayout } from "@/lib/gift-voucher";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +22,17 @@ export async function GET(
     return NextResponse.json({ error: "Voucher not found." }, { status: 404 });
   }
 
+  const layout = await getVoucherLayout();
+
   const pdf = buildVoucherTicketPdf({
     voucherNo: voucher.voucherNo,
     amount: Number(voucher.amount),
     recipientName: voucher.recipientName,
+    buyerName: voucher.buyerName,
     validUntil: voucher.validUntil,
     purchasedAt: voucher.purchasedAt,
     message: voucher.message,
+    layout,
   });
 
   await logAudit(

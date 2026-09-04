@@ -1,22 +1,30 @@
 /**
  * Minimal dependency-free PDF generator (uses only the built-in Helvetica
- * font, so no native deps and nothing to download at build/runtime).
- *
- * Produces clean, printable A4 documents used for gift-voucher downloads and
- * voucher-list exports.
+ * font, plus PNG image embedding via the FlateDecode filter — nothing to
+ * download at build/runtime).
  */
+import { readFileSync } from "fs";
+import path from "path";
+import zlib from "zlib";
 import { BUSINESS } from "./business";
-import { voucherAmountLabel } from "./gift-voucher";
+import { voucherAmountLabel, validUntilParts, VoucherLayout } from "./gift-voucher";
 
-const PAGE_W = 595; // A4 landscape? use portrait
+const PAGE_W = 595; // A4 portrait
 const PAGE_H = 842;
+
+const DEFAULT_LAYOUT: VoucherLayout = {
+  amount: { x: 75, y: 5 },
+  to: { x: 30, y: 40 },
+  from: { x: 30, y: 55 },
+  voucherNo: { x: 5, y: 85 },
+  validUntil: { x: 70, y: 85 },
+};
 
 function escapeText(s: string): string {
   return s.toString()
     .replace(/\\/g, "\\\\")
     .replace(/\(/g, "\\(")
     .replace(/\)/g, "\\)")
-    // Map common unicode to WinAnsi approximations (é, –, ’ …)
     .replace(/[éÉ]/g, "e")
     .replace(/[èÈ]/g, "e")
     .replace(/[àÀ]/g, "a")
@@ -33,93 +41,254 @@ function escapeText(s: string): string {
     .replace(/“|”/g, '"');
 }
 
-function header(): string {
-  return `1 0 0 1 0 0 cm
-q
-BT
-/F1 13 Tf
-0.10 0.20 0.45 rg
-1 1 1 rg
-0 0 0 rg`;
+/**
+ * Decode a PNG file into raw RGB pixel data + dimensions so it can be
+ * embedded in the PDF as an image XObject. Supports 8-bit greyscale,
+ * truecolor (RGB), and RGB-with-alpha (alpha discarded), all with or
+ * without palette / interlace (non-interlaced only).
+ */
+function decodePng(buffer: Buffer): {
+  width: number;
+  height: number;
+  rgb: Buffer;
+} {
+  if (buffer.readUInt32BE(0) !== 0x89504e47) throw new Error("Not a PNG");
+  let pos = 8;
+  let width = 0;
+  let height = 0;
+  let bitDepth = 0;
+  let colorType = 0;
+  let idat: Buffer[] = [];
+  let interlace = 0;
+
+  while (pos < buffer.length) {
+    const len = buffer.readUInt32BE(pos);
+    const type = buffer.toString("ascii", pos + 4, pos + 8);
+    const data = buffer.subarray(pos + 8, pos + 8 + len);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data.readUInt8(8);
+      colorType = data.readUInt8(9);
+      interlace = data.readUInt8(12);
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    pos += 12 + len;
+  }
+
+  if (bitDepth !== 8) {
+    if (colorType === 0 && bitDepth === 8) {
+      // ok greyscale 8
+    } else if (bitDepth === 16) {
+      throw new Error("16-bit PNG not supported");
+    } else if (colorType === 3 && bitDepth === 8) {
+      // palette 8 ok
+    } else {
+      throw new Error(`Unsupported PNG bit depth ${bitDepth} color ${colorType}`);
+    }
+  }
+  if (interlace !== 0) throw new Error("Interlaced PNG not supported");
+
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+
+  // bytes per pixel based on color type
+  const ch =
+    colorType === 0 ? 1 : colorType === 2 ? 3 : colorType === 4 ? 2 : colorType === 6 ? 4 : 1;
+  const stride = width * ch;
+  const out = Buffer.alloc(width * height * 3);
+
+  // unfilter each scanline
+  let prev: Buffer = Buffer.alloc(stride);
+  for (let y = 0; y < height; y++) {
+    const filter = raw[y * (stride + 1)];
+    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    const cur = Buffer.from(line);
+    for (let i = 0; i < stride; i++) {
+      const a = i >= ch ? cur[i - ch] : 0;
+      const b = prev[i];
+      const c = i >= ch ? prev[i - ch] : 0;
+      let v = cur[i];
+      switch (filter) {
+        case 0:
+          break;
+        case 1:
+          v = (v + a) & 0xff;
+          break;
+        case 2:
+          v = (v + b) & 0xff;
+          break;
+        case 3:
+          v = (v + ((a + b) >> 1)) & 0xff;
+          break;
+        case 4:
+          {
+            const p = a + b - c;
+            let pa = Math.abs(p - a);
+            let pb = Math.abs(p - b);
+            let pc = Math.abs(p - c);
+            v = (v + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c)) & 0xff;
+          }
+          break;
+      }
+      cur[i] = v;
+    }
+    // write RGB pixels
+    for (let x = 0; x < width; x++) {
+      const src = x * ch;
+      let r = 0, g = 0, b = 0;
+      if (colorType === 2 || colorType === 6) {
+        r = cur[src]; g = cur[src + 1]; b = cur[src + 2];
+      } else if (colorType === 0) {
+        r = g = b = cur[src];
+      } else if (colorType === 3) {
+        // need palette — not handled; treat as greyscale fallback
+        r = g = b = cur[src];
+      } else if (colorType === 4) {
+        r = g = b = cur[src];
+      }
+      const o = (y * width + x) * 3;
+      out[o] = r; out[o + 1] = g; out[o + 2] = b;
+    }
+    prev = cur;
+  }
+
+  return { width, height, rgb: out };
 }
 
 /**
- * Build a single-voucher PDF ticket. Returns the full PDF bytes.
+ * Build a single-voucher PDF ticket that uses the saved template image as a
+ * full-page background and overlays the voucher values (per the layout).
  */
 export function buildVoucherTicketPdf(x: {
   voucherNo: string;
   amount: number;
   recipientName: string;
+  buyerName?: string | null;
   validUntil: Date;
   purchasedAt?: Date;
   message?: string | null;
+  layout?: VoucherLayout;
 }): Buffer {
-  const W = 842; // ticket (landscape-ish)
+  const W = 842; // ticket landscape
   const H = 420;
+
+  const layout = { ...DEFAULT_LAYOUT, ...(x.layout ?? {}) };
+
+  // scale percentage coords to PDF points
+  const px = (pct: number) => (pct / 100) * W;
+  const py = (pct: number) => (pct / 100) * H;
+
   const H_ = (y: number) => H - y;
 
   const draw: string[] = [];
-  const f = (font: "F1" | "F2", size: number, xp: number, yp: number, color: string, str: string) => {
-    draw.push(`BT /${font} ${size} Tf ${color} rg ${xp} ${H_(yp)} Td (${escapeText(str)}) Tj ET`);
-  };
 
-  draw.push(`0 0 ${W} ${H} re f`);
-  draw.push(`0.95 0.95 0.95 rg`);
-  draw.push(`20 20 ${W - 40} ${H - 40} re f`);
+  let imgName: string | null = null;
+  let imgDims: { width: number; height: number; rgb: Buffer } | null = null;
 
-  let y = 40;
-  f("F2", 30, (W / 2) - 130, y, "0.10 0.20 0.45", BUSINESS.name);
-  y += 32;
-  f("F1", 13, (W / 2) - 80, y, "0.45 0.45 0.45", "Be You. Be Beautiful.");
-  y += 44;
+  try {
+    const templatePath = path.join(process.cwd(), "public", "images", "voucher-template.png");
+    const png = readFileSync(templatePath);
+    imgDims = decodePng(png);
+    imgName = "I1";
+    const w = imgDims.width;
+    const h = imgDims.height;
+    void w;
+    void h;
 
-  f("F2", 20, 40, y, "0 0 0", "GIFT VOUCHER");
-  f("F1", 13, 40, y + 24, "0.45 0.45 0.45", `Voucher No: ${x.voucherNo}`);
-  y += 58;
-
-  draw.push(`BT /F2 42 Tf 0.85 0.30 0.10 rg 60 ${H_(y)} Td (${escapeText(voucherAmountLabel(x.amount))}) Tj ET`);
-  y += 56;
-
-  f("F1", 14, 40, y, "0 0 0", `For: ${x.recipientName}`);
-  y += 24;
-  f("F1", 12, 40, y, "0.30 0.30 0.30", `Purchased: ${x.purchasedAt ? x.purchasedAt.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" }) : "—"}`);
-  y += 20;
-  f("F1", 12, 40, y, "0.30 0.30 0.30", `Valid until: ${new Date(x.validUntil).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}`);
-  y += 34;
-  if (x.message) {
-    f("F1", 11, 40, y, "0.30 0.30 0.30", `Message: ${x.message}`);
-    y += 20;
+    // Render the background image stretched to the full page.
+    draw.push(`q`);
+    draw.push(`${W} 0 0 ${H} 0 0 cm`);
+    draw.push(`/${imgName} Do`);
+    draw.push(`Q`);
+  } catch {
+    // image missing — fall back to a plain background
+    draw.push(`0 0 ${W} ${H} re f`);
   }
-  f("F1", 11, 40, y, "0.30 0.30 0.30", "Present this voucher at Bee-U by Bernie to redeem.");
+
+  // Overlay values on the template
+  const dateGap = 19; // ~1cm gap between day/month/year scaled to ticket
+
+  // Amount (uppercase label exists on template, draw only the value)
+  const amountStr = voucherAmountLabel(x.amount);
+  const amtX = px(layout.amount.x);
+  const amtY = py(layout.amount.y);
+  draw.push(`BT /F2 24 Tf 0.15 0.15 0.15 rg ${amtX} ${H_(amtY)} Td (${escapeText(amountStr)}) Tj ET`);
+
+  // To
+  const toX = px(layout.to.x);
+  const toY = py(layout.to.y);
+  draw.push(`BT /F2 22 Tf 0.15 0.15 0.15 rg ${toX} ${H_(toY)} Td (${escapeText(x.recipientName)}) Tj ET`);
+
+  // From
+  if (x.buyerName) {
+    const fX = px(layout.from.x);
+    const fY = py(layout.from.y);
+    draw.push(`BT /F2 22 Tf 0.15 0.15 0.15 rg ${fX} ${H_(fY)} Td (${escapeText(x.buyerName)}) Tj ET`);
+  }
+
+  // Voucher no
+  const vX = px(layout.voucherNo.x);
+  const vY = py(layout.voucherNo.y);
+  draw.push(`BT /F1 20 Tf 0.15 0.15 0.15 rg ${vX} ${H_(vY)} Td (${escapeText(x.voucherNo)}) Tj ET`);
+
+  // Valid until — day month year spaced ~1cm apart (scaled to ticket)
+  const parts = validUntilParts(x.validUntil);
+  const dX = px(layout.validUntil.x);
+  const dY = py(layout.validUntil.y);
+  let cursor = dX;
+  draw.push(`BT /F2 22 Tf 0.15 0.15 0.15 rg`);
+  draw.push(`${cursor} ${H_(dY)} Td (${parts.day}) Tj`);
+  cursor += 60 + 22;
+  draw.push(`${cursor} ${H_(dY)} Td (/) Tj`);
+  cursor += 22 + 60 + 22;
+  draw.push(`${cursor} ${H_(dY)} Td (${parts.month}) Tj`);
+  cursor += 60 + 22;
+  draw.push(`${cursor} ${H_(dY)} Td (/) Tj`);
+  cursor += 22 + 60 + 22;
+  draw.push(`${cursor} ${H_(dY)} Td (${parts.year}) Tj`);
+  draw.push(`ET`);
 
   const contentBody = draw.join("\n");
 
   const fontHelv = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
   const fontBold = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
-  const contentId = "<< /Length ${contentBody.length} >>\nstream\n${contentBody}\nendstream";
 
+  // Assemble objects
   const objs: string[] = [];
   objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
   objs[2] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
-  objs[3] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>`;
-  objs[4] = `<< /Length ${contentBody.length} >>\nstream\n${contentBody}\nendstream`;
-  objs[5] = fontHelv;
-  objs[6] = fontBold;
+
+  if (imgName && imgDims) {
+    const compressedImg = zlib.deflateSync(imgDims.rgb);
+    objs[4] = `<< /Length ${contentBody.length} >>\nstream\n${contentBody}\nendstream`;
+    objs[5] = fontHelv;
+    objs[6] = fontBold;
+    objs[7] = `<< /Type /XObject /Subtype /Image /Width ${imgDims.width} /Height ${imgDims.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${compressedImg.length} >>\nstream\n${compressedImg.toString("latin1")}\nendstream`;
+    objs[3] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> /XObject << /I1 7 0 R >> >> /Contents 4 0 R >>`;
+  } else {
+    objs[4] = `<< /Length ${contentBody.length} >>\nstream\n${contentBody}\nendstream`;
+    objs[5] = fontHelv;
+    objs[6] = fontBold;
+    objs[3] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>`;
+  }
 
   let body = "";
   const offsets: number[] = [];
-  for (let i = 1; i <= 6; i++) {
+  const total = imgName ? 8 : 7;
+  for (let i = 1; i < total; i++) {
     offsets[i] = body.length;
     body += `${i} 0 obj\n${objs[i]}\nendobj\n`;
   }
   const finalPdf = "%PDF-1.4\n" + body;
   const xrefPos = finalPdf.length;
-  const count = 7;
-  let xref = `xref\n0 ${count}\n0000000000 65535 f \n`;
-  for (let i = 1; i <= 6; i++) {
+  let xref = `xref\n0 ${total}\n0000000000 65535 f \n`;
+  for (let i = 1; i < total; i++) {
     xref += `${offsets[i].toString().padStart(10, "0")} 00000 n \n`;
   }
-  return Buffer.from(finalPdf + xref + `trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`, "latin1");
+  return Buffer.from(finalPdf + xref + `trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`, "latin1");
 }
 
 /**
@@ -148,7 +317,6 @@ export function buildVoucherListPdf(
 
   const headers = ["Voucher No", "Recipient", "Value", "Status", "Purchased", "Valid Until"];
 
-  // Build pages of content; simple single-page-per-~30 rows
   const perPage = 26;
   const pages: typeof rows[] = [];
   for (let i = 0; i < rows.length; i += perPage) {
@@ -156,8 +324,7 @@ export function buildVoucherListPdf(
   }
   if (pages.length === 0) pages.push([]);
 
-  // We'll assemble objects then build xref
-  const objects: { body: string }[] = [{ body: "%PDF placeholder" }]; // 1-indexed
+  const objects: { body: string }[] = [{ body: "%PDF placeholder" }];
 
   const pushObj = (body: string) => {
     objects.push({ body });
@@ -172,8 +339,7 @@ export function buildVoucherListPdf(
   const fontId = pushObj(fontHelv);
   const fontBoldId = pushObj(fontBold);
 
-  // page object ids need to be known to parent; build them
-  let running = 4; // catalog, pages, font, fontbold
+  let running = 4;
   const pageObjectIds: number[] = [];
   for (let p = 0; p < pages.length; p++) {
     const contentBody = renderPageContent(pages[p], W, H, headers, statusOk);
@@ -185,7 +351,6 @@ export function buildVoucherListPdf(
   }
   objects[pagesId].body = `<< /Type /Pages /Kids [${pageObjectIds.join(" ")} 0 R] /Count ${pageObjectIds.length} >>`;
 
-  // Rebuild body with correct numbers
   let body = "";
   const offsets: number[] = [];
   for (let i = 1; i < objects.length; i++) {
@@ -220,7 +385,6 @@ function renderPageContent(
   draw.push(`BT /F2 18 Tf 0.10 0.20 0.45 rg ${left} ${H_(y)} Td (${escapeText(`${BUSINESS.name} — Gift Vouchers`)}) Tj ET`);
   y += 30;
 
-  // Headers
   const cols = [100, 120, 80, 90, 130, 130];
   let cx = left;
   draw.push(`BT /F2 10 Tf 0 0 0 rg`);
