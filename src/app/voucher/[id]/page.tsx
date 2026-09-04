@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { voucherAmountLabel, getVoucherLayout, validUntilParts, formatValidUntil } from "@/lib/gift-voucher";
+import { voucherAmountLabel, getVoucherLayout, validUntilParts } from "@/lib/gift-voucher";
 import { BUSINESS } from "@/lib/business";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
@@ -65,15 +65,7 @@ export default async function VoucherViewPage({
         </div>
 
         <div className="mt-6 flex justify-center">
-          <VoucherPngDownload
-            voucherNo={voucher.voucherNo}
-            amountLabel={voucherAmountLabel(amount)}
-            recipientName={voucher.recipientName}
-            buyerName={voucher.buyerName}
-            validUntil={`${formatValidUntil(voucher.validUntil).split("/").join(" / ")}`}
-            layout={layout}
-            filename={`bee-u-voucher-${voucher.voucherNo}.png`}
-          />
+          <VoucherPngDownload filename={`bee-u-voucher-${voucher.voucherNo}.png`} />
         </div>
 
         <div className="mt-8 text-center text-sm text-foreground/40">
