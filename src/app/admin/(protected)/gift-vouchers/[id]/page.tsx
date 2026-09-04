@@ -64,35 +64,30 @@ export default async function VoucherDetailPage({
               {/* Transparent text overlay — positions from layout editor */}
               <div className="absolute inset-0">
                 <FieldOverlay
-                  label="Amount"
                   value={voucherAmountLabel(amount)}
                   x={layout.amount.x}
                   y={layout.amount.y}
                   className="text-right text-3xl font-bold text-primary-dark/80"
                 />
                 <FieldOverlay
-                  label="To"
                   value={voucher.recipientName}
                   x={layout.to.x}
                   y={layout.to.y}
                 />
                 {voucher.buyerName && (
                   <FieldOverlay
-                    label="From"
                     value={voucher.buyerName}
                     x={layout.from.x}
                     y={layout.from.y}
                   />
                 )}
                 <FieldOverlay
-                  label="Voucher No"
                   value={voucher.voucherNo}
                   x={layout.voucherNo.x}
                   y={layout.voucherNo.y}
                   className="font-mono text-sm font-bold"
                 />
                 <FieldOverlay
-                  label="Valid Until"
                   value={validUntilStr}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
@@ -162,13 +157,11 @@ export default async function VoucherDetailPage({
 }
 
 function FieldOverlay({
-  label,
   value,
   x,
   y,
   className,
 }: {
-  label: string;
   value: string;
   x: number;
   y: number;
@@ -179,7 +172,6 @@ function FieldOverlay({
       className="absolute rounded-lg bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm"
       style={{ left: `${x}%`, top: `${y}%` }}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-dark/50">{label}</p>
       <p className={`text-sm font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
     </div>
   );

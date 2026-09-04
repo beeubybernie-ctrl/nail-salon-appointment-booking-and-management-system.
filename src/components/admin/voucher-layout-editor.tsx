@@ -18,6 +18,14 @@ interface Layout {
 }
 
 const FIELD_LABELS: Record<keyof Layout, string> = {
+  amount: "R250",
+  to: "Jane Smith",
+  from: "Sarah",
+  voucherNo: "BU250040926X7K2",
+  validUntil: "04/12/2026",
+};
+
+const FIELD_NAMES: Record<keyof Layout, string> = {
   amount: "Amount",
   to: "To",
   from: "From",
@@ -127,7 +135,7 @@ export function VoucherLayoutEditor({ initialLayout }: { initialLayout?: Layout 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-foreground/60">
-          Drag each field to the correct position on the template. Fields snap to percentage coordinates.
+          Drag each value to sit on top of its label on the template (TO:, FROM:, AMOUNT:, VOUCHER NO:, VALID UNTIL: are already on the template). Fields snap to percentage coordinates.
         </p>
         <button
           onClick={handleSave}
@@ -174,10 +182,10 @@ export function VoucherLayoutEditor({ initialLayout }: { initialLayout?: Layout 
                 touchAction: "none",
               }}
             >
-              <span className="pointer-events-none block text-[10px] uppercase tracking-wider opacity-60">
+              <span className="pointer-events-none block text-sm">
                 {FIELD_LABELS[field]}
               </span>
-              <span className="pointer-events-none block font-mono text-sm">
+              <span className="pointer-events-none block font-mono text-[10px] opacity-50">
                 {pos.x}%, {pos.y}%
               </span>
             </div>
@@ -189,7 +197,7 @@ export function VoucherLayoutEditor({ initialLayout }: { initialLayout?: Layout 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {(Object.keys(layout) as (keyof Layout)[]).map((field) => (
           <div key={field} className="rounded-xl border border-foreground/10 p-3">
-            <p className="mb-2 text-xs font-semibold text-foreground/60">{FIELD_LABELS[field]}</p>
+            <p className="mb-2 text-xs font-semibold text-foreground/60">{FIELD_NAMES[field]}</p>
             <div className="flex gap-2">
               <label className="flex items-center gap-1 text-xs text-foreground/50">
                 X

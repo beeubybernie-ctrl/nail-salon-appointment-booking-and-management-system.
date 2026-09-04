@@ -72,9 +72,9 @@ export function formatPurchaseDate(d: Date): string {
 }
 
 export function formatValidUntil(d: Date): string {
-  return new Date(d).toLocaleDateString("en-ZA", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const nd = new Date(d);
+  const dd = nd.getDate().toString().padStart(2, "0");
+  const mm = (nd.getMonth() + 1).toString().padStart(2, "0");
+  const yyyy = nd.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }
