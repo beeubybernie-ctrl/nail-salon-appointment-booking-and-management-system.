@@ -139,12 +139,6 @@ export default async function GiftVouchersPage() {
                       voucherId={v.id}
                       currentStatus={v.status}
                     />
-                    <Link
-                      href={`/api/admin/gift-vouchers/${v.id}/download`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
-                    >
-                      Download PDF
-                    </Link>
                     <a
                       href={whatsappLink(waMessage)}
                       target="_blank"

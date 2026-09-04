@@ -8,7 +8,8 @@ import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLay
 import { whatsappLink, toWhatsAppNumber } from "@/lib/notifications";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, Download, ImageIcon, MessageCircle } from "lucide-react";
+import { ChevronLeft, MessageCircle } from "lucide-react";
+import { VoucherPngDownload } from "@/components/admin/voucher-png-download";
 
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app").trim().replace(/\/+$/, "");
 
@@ -117,18 +118,15 @@ export default async function VoucherDetailPage({
               voucherId={voucher.id}
               currentStatus={voucher.status}
             />
-            <a
-              href={`/api/admin/gift-vouchers/${voucher.id}/download`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
-            >
-              <Download className="h-3.5 w-3.5" /> Download PDF
-            </a>
-            <a
-              href={`/api/admin/gift-vouchers/${voucher.id}/image`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
-            >
-              <ImageIcon className="h-3.5 w-3.5" /> Download PNG
-            </a>
+            <VoucherPngDownload
+              voucherNo={voucher.voucherNo}
+              amountLabel={voucherAmountLabel(amount)}
+              recipientName={voucher.recipientName}
+              buyerName={voucher.buyerName}
+              validUntil={`${validUntilStr.split("/").join(" / ")}`}
+              layout={layout}
+              filename={`bee-u-voucher-${voucher.voucherNo}.png`}
+            />
             <a
               href={whatsappLink(waMessage, voucher.recipientPhone ? toWhatsAppNumber(voucher.recipientPhone) : undefined)}
               target="_blank"
