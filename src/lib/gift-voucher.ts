@@ -78,3 +78,18 @@ export function formatValidUntil(d: Date): string {
   const yyyy = nd.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }
+
+export interface ValidUntilParts {
+  day: string;
+  month: string;
+  year: string;
+}
+
+export function validUntilParts(d: Date): ValidUntilParts {
+  const nd = new Date(d);
+  return {
+    day: nd.getDate().toString().padStart(2, "0"),
+    month: (nd.getMonth() + 1).toString().padStart(2, "0"),
+    year: nd.getFullYear().toString(),
+  };
+}

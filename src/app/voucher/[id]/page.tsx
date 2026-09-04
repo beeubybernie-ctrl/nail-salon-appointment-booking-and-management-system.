@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { voucherAmountLabel, formatValidUntil, getVoucherLayout } from "@/lib/gift-voucher";
+import { voucherAmountLabel, getVoucherLayout, validUntilParts } from "@/lib/gift-voucher";
 import { BUSINESS } from "@/lib/business";
 import type { Metadata } from "next";
 
@@ -33,7 +33,6 @@ export default async function VoucherViewPage({
   if (!voucher) notFound();
 
   const amount = Number(voucher.amount);
-  const validUntilStr = formatValidUntil(voucher.validUntil);
   const layout = await getVoucherLayout();
 
   return (
@@ -58,7 +57,7 @@ export default async function VoucherViewPage({
               <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} className="text-2xl" />
             )}
             <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-2xl font-bold" />
-            <FieldValue value={validUntilStr} x={layout.validUntil.x} y={layout.validUntil.y} width="70%" alignRight className="text-4xl" />
+            <FieldValue value="" dateParts={validUntilParts(voucher.validUntil)} x={layout.validUntil.x} y={layout.validUntil.y} className="text-4xl" />
           </div>
         </div>
 
@@ -73,6 +72,7 @@ export default async function VoucherViewPage({
 
 function FieldValue({
   value,
+  dateParts,
   x,
   y,
   className,
@@ -80,6 +80,7 @@ function FieldValue({
   alignRight,
 }: {
   value: string;
+  dateParts?: { day: string; month: string; year: string };
   x: number;
   y: number;
   className?: string;
@@ -96,7 +97,17 @@ function FieldValue({
         textAlign: alignRight ? "right" : "left",
       }}
     >
-      <p className={`font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
+      {dateParts ? (
+        <p className={`flex items-center font-semibold text-foreground/80 ${className ?? ""}`}>
+          <span>{dateParts.day}</span>
+          <span className="mx-[19px]">/</span>
+          <span>{dateParts.month}</span>
+          <span className="mx-[19px]">/</span>
+          <span>{dateParts.year}</span>
+        </p>
+      ) : (
+        <p className={`font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
+      )}
     </div>
   );
 }

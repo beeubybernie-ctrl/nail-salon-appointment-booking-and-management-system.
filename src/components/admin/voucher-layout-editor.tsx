@@ -33,6 +33,14 @@ const FIELD_NAMES: Record<keyof Layout, string> = {
   validUntil: "Valid Until",
 };
 
+const FIELD_SIZES: Record<keyof Layout, string> = {
+  amount: "text-5xl font-bold",
+  to: "text-2xl",
+  from: "text-2xl",
+  voucherNo: "text-2xl font-bold",
+  validUntil: "text-4xl",
+};
+
 const DEFAULT_LAYOUT: Layout = {
   amount: { x: 75, y: 5 },
   to: { x: 30, y: 40 },
@@ -182,7 +190,7 @@ export function VoucherLayoutEditor({ initialLayout }: { initialLayout?: Layout 
                 touchAction: "none",
               }}
             >
-              <span className="pointer-events-none block text-sm">
+              <span className={`pointer-events-none block ${FIELD_SIZES[field]}`}>
                 {FIELD_LABELS[field]}
               </span>
               <span className="pointer-events-none block font-mono text-[10px] opacity-50">

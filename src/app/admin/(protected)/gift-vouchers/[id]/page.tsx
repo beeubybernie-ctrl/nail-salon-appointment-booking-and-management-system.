@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLayout } from "@/lib/gift-voucher";
+import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLayout, validUntilParts } from "@/lib/gift-voucher";
 import { whatsappLink } from "@/lib/notifications";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,17 +84,16 @@ export default async function VoucherDetailPage({
                   />
                 )}
                 <FieldOverlay
-                  value={voucher.voucherNo}
+                  value={`${voucher.voucherNo}`}
                   x={layout.voucherNo.x}
                   y={layout.voucherNo.y}
                   className="font-mono text-2xl font-bold"
                 />
                 <FieldOverlay
-                  value={validUntilStr}
+                  value=""
+                  dateParts={validUntilParts(voucher.validUntil)}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
-                  width="70%"
-                  alignRight
                   className="text-4xl"
                 />
               </div>
@@ -163,6 +162,7 @@ export default async function VoucherDetailPage({
 
 function FieldOverlay({
   value,
+  dateParts,
   x,
   y,
   className,
@@ -170,6 +170,7 @@ function FieldOverlay({
   alignRight,
 }: {
   value: string;
+  dateParts?: { day: string; month: string; year: string };
   x: number;
   y: number;
   className?: string;
@@ -186,7 +187,17 @@ function FieldOverlay({
         textAlign: alignRight ? "right" : "left",
       }}
     >
-      <p className={`font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
+      {dateParts ? (
+        <p className={`flex items-center font-semibold text-foreground/80 ${className ?? ""}`}>
+          <span>{dateParts.day}</span>
+          <span className="mx-[19px]">/</span>
+          <span>{dateParts.month}</span>
+          <span className="mx-[19px]">/</span>
+          <span>{dateParts.year}</span>
+        </p>
+      ) : (
+        <p className={`font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
+      )}
     </div>
   );
 }
