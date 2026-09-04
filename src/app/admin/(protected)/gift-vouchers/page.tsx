@@ -143,6 +143,12 @@ export default async function GiftVouchersPage() {
                     >
                       <MessageCircle className="h-3.5 w-3.5" /> WhatsApp Voucher
                     </a>
+                    <Link
+                      href={`/admin/gift-vouchers/${v.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
+                    >
+                      View
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
