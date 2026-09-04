@@ -91,6 +91,7 @@ export default async function VoucherDetailPage({
                   value={validUntilStr}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
+                  className="text-lg"
                 />
               </div>
             </div>

@@ -58,7 +58,7 @@ export default async function VoucherViewPage({
               <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} />
             )}
             <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-sm font-bold" />
-            <FieldValue value={validUntilStr} x={layout.validUntil.x} y={layout.validUntil.y} />
+            <FieldValue value={validUntilStr} x={layout.validUntil.x} y={layout.validUntil.y} className="text-lg" />
           </div>
         </div>
 
