@@ -34,11 +34,11 @@ const FIELD_NAMES: Record<keyof Layout, string> = {
 };
 
 const FIELD_SIZES: Record<keyof Layout, string> = {
-  amount: "text-5xl font-bold",
+  amount: "text-2xl font-bold",
   to: "text-2xl",
   from: "text-2xl",
   voucherNo: "text-2xl font-bold",
-  validUntil: "text-4xl",
+  validUntil: "text-2xl",
 };
 
 const DEFAULT_LAYOUT: Layout = {

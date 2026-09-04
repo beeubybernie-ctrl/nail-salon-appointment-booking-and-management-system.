@@ -51,13 +51,13 @@ export default async function VoucherViewPage({
           />
           {/* Values only — labels are on the template */}
           <div className="absolute inset-0">
-            <FieldValue value={voucherAmountLabel(amount)} x={layout.amount.x} y={layout.amount.y} className="text-right text-5xl font-bold text-primary-dark/80" />
+            <FieldValue value={voucherAmountLabel(amount)} x={layout.amount.x} y={layout.amount.y} className="text-right text-2xl font-bold text-primary-dark/80" />
             <FieldValue value={voucher.recipientName} x={layout.to.x} y={layout.to.y} className="text-2xl" />
             {voucher.buyerName && (
               <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} className="text-2xl" />
             )}
             <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-2xl font-bold" />
-            <FieldValue value="" dateParts={validUntilParts(voucher.validUntil)} x={layout.validUntil.x} y={layout.validUntil.y} className="text-4xl" />
+            <FieldValue value="" dateParts={validUntilParts(voucher.validUntil)} x={layout.validUntil.x} y={layout.validUntil.y} className="text-2xl" />
           </div>
         </div>
 

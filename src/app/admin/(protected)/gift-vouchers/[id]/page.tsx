@@ -67,7 +67,7 @@ export default async function VoucherDetailPage({
                   value={voucherAmountLabel(amount)}
                   x={layout.amount.x}
                   y={layout.amount.y}
-                  className="text-right text-5xl font-bold text-primary-dark/80"
+                  className="text-right text-2xl font-bold text-primary-dark/80"
                 />
                 <FieldOverlay
                   value={voucher.recipientName}
@@ -94,7 +94,7 @@ export default async function VoucherDetailPage({
                   dateParts={validUntilParts(voucher.validUntil)}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
-                  className="text-4xl"
+                  className="text-2xl"
                 />
               </div>
             </div>
