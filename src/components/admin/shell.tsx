@@ -17,6 +17,7 @@ import {
   LogOut,
   Clock,
   ListChecks,
+  Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { label: "Price List", href: "/admin/price-list", icon: ListChecks },
   { label: "Blocked Time", href: "/admin/blocked-time", icon: Clock },
   { label: "Business Hours", href: "/admin/business-hours", icon: Store },
+  { label: "Gift Vouchers", href: "/admin/gift-vouchers", icon: Gift },
   { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "Notifications", href: "/admin/notifications", icon: Bell },
 ];

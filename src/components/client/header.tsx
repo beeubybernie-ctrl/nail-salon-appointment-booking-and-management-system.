@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: "Services", href: "/services" },
   { label: "Price List", href: "/price-list" },
   { label: "Book Appointment", href: "/book" },
+  { label: "Gift Vouchers", href: "/gift-voucher" },
   { label: "Contact", href: "/contact" },
 ];
 

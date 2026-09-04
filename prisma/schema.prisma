@@ -140,3 +140,22 @@ model NotificationLog {
   sentAt    DateTime?
   createdAt DateTime @default(now())
 }
+
+model GiftVoucher {
+  id             String    @id @default(uuid())
+  voucherNo      String    @unique
+  amount         Decimal
+  recipientName  String
+  recipientPhone String?
+  message        String?
+  buyerName      String?
+  buyerPhone     String?
+  buyerEmail     String?
+  status         String    @default("REQUESTED")
+  purchasedAt    DateTime  @default(now())
+  validUntil     DateTime
+  redeemedAt     DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
