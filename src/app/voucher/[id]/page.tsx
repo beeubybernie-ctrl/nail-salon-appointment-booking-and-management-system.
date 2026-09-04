@@ -84,7 +84,7 @@ function FieldValue({
 }) {
   return (
     <div
-      className="absolute rounded-lg bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm"
+      className="absolute"
       style={{ left: `${x}%`, top: `${y}%` }}
     >
       <p className={`text-sm font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
