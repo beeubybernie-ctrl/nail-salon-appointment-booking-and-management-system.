@@ -5,10 +5,12 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLayout, validUntilParts } from "@/lib/gift-voucher";
-import { whatsappLink } from "@/lib/notifications";
+import { whatsappLink, toWhatsAppNumber } from "@/lib/notifications";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, Download, MessageCircle } from "lucide-react";
+import { ChevronLeft, Download, ImageIcon, MessageCircle } from "lucide-react";
+
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app").trim().replace(/\/+$/, "");
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,8 @@ export default async function VoucherDetailPage({
     `Valid until: ${validUntilStr}`,
     ``,
     `Present this voucher at the salon to redeem.`,
+    ``,
+    `View / download your voucher: ${APP_URL}/voucher/${voucher.id}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -120,7 +124,13 @@ export default async function VoucherDetailPage({
               <Download className="h-3.5 w-3.5" /> Download PDF
             </a>
             <a
-              href={whatsappLink(waMessage)}
+              href={`/api/admin/gift-vouchers/${voucher.id}/image`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
+            >
+              <ImageIcon className="h-3.5 w-3.5" /> Download PNG
+            </a>
+            <a
+              href={whatsappLink(waMessage, voucher.recipientPhone ? toWhatsAppNumber(voucher.recipientPhone) : undefined)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-2 text-xs font-medium text-white hover:bg-[#1eb958]"
