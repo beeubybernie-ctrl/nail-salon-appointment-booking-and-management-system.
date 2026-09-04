@@ -59,7 +59,7 @@ export default async function VoucherDetailPage({
         {/* Voucher visual — template with transparent text overlay */}
         <div className="space-y-4">
           <Card className="overflow-hidden p-0">
-            <div className="relative w-full" style={{ aspectRatio: "1536/1024" }}>
+            <div className="relative w-full" data-voucher-card style={{ aspectRatio: "1536/1024" }}>
               <Image
                 src="/images/voucher-template.png"
                 alt="Voucher"
@@ -118,15 +118,7 @@ export default async function VoucherDetailPage({
               voucherId={voucher.id}
               currentStatus={voucher.status}
             />
-            <VoucherPngDownload
-              voucherNo={voucher.voucherNo}
-              amountLabel={voucherAmountLabel(amount)}
-              recipientName={voucher.recipientName}
-              buyerName={voucher.buyerName}
-              validUntil={`${validUntilStr.split("/").join(" / ")}`}
-              layout={layout}
-              filename={`bee-u-voucher-${voucher.voucherNo}.png`}
-            />
+            <VoucherPngDownload filename={`bee-u-voucher-${voucher.voucherNo}.png`} />
             <a
               href={whatsappLink(waMessage, voucher.recipientPhone ? toWhatsAppNumber(voucher.recipientPhone) : undefined)}
               target="_blank"

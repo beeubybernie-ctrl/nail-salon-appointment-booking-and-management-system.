@@ -5,6 +5,7 @@ import { voucherAmountLabel, getVoucherLayout, validUntilParts } from "@/lib/gif
 import { BUSINESS } from "@/lib/business";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import { VoucherPngDownload } from "@/components/admin/voucher-png-download";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function VoucherViewPage({
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
         <div
           className="relative overflow-hidden rounded-3xl shadow-2xl"
+          data-voucher-card
           style={{ aspectRatio: "1536/1024" }}
         >
           <Image
@@ -60,6 +62,10 @@ export default async function VoucherViewPage({
             <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} size={layout.voucherNo.size} font={layout.voucherNo.font} />
             <FieldValue value="" dateParts={validUntilParts(voucher.validUntil)} x={layout.validUntil.x} y={layout.validUntil.y} size={layout.validUntil.size} font={layout.validUntil.font} />
           </div>
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <VoucherPngDownload filename={`bee-u-voucher-${voucher.voucherNo}.png`} />
         </div>
 
         <div className="mt-8 text-center text-sm text-foreground/40">
