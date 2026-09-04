@@ -67,34 +67,34 @@ export default async function VoucherDetailPage({
                   value={voucherAmountLabel(amount)}
                   x={layout.amount.x}
                   y={layout.amount.y}
-                  className="text-right text-2xl font-bold text-primary-dark/80"
+                  className="text-right text-lg font-bold"
                 />
                 <FieldOverlay
                   value={voucher.recipientName}
                   x={layout.to.x}
                   y={layout.to.y}
-                  className="text-2xl"
+                  className="text-lg"
                 />
                 {voucher.buyerName && (
                   <FieldOverlay
                     value={voucher.buyerName}
                     x={layout.from.x}
                     y={layout.from.y}
-                    className="text-2xl"
+                    className="text-lg"
                   />
                 )}
                 <FieldOverlay
                   value={`${voucher.voucherNo}`}
                   x={layout.voucherNo.x}
                   y={layout.voucherNo.y}
-                  className="font-mono text-2xl font-bold"
+                  className="font-mono text-sm font-bold"
                 />
                 <FieldOverlay
                   value=""
                   dateParts={validUntilParts(voucher.validUntil)}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
-                  className="text-2xl"
+                  className="text-base"
                 />
               </div>
             </div>
@@ -188,15 +188,15 @@ function FieldOverlay({
       }}
     >
       {dateParts ? (
-        <p className={`flex items-center font-semibold text-foreground/80 ${className ?? ""}`}>
+        <p className={`flex items-center font-semibold text-primary-dark ${className ?? ""}`}>
           <span>{dateParts.day}</span>
-          <span className="mx-[19px]">/</span>
+          <span className="mx-[8px]">/</span>
           <span>{dateParts.month}</span>
-          <span className="mx-[19px]">/</span>
+          <span className="mx-[8px]">/</span>
           <span>{dateParts.year}</span>
         </p>
       ) : (
-        <p className={`font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
+        <p className={`font-semibold text-primary-dark ${className ?? ""}`}>{value}</p>
       )}
     </div>
   );

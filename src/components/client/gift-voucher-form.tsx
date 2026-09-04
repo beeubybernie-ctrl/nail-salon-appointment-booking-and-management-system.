@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Check, Gift } from "lucide-react";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,6 @@ export function GiftVoucherForm() {
     amount: string;
     recipientName: string;
     recipientPhone: string;
-    message: string;
     buyerName: string;
     buyerPhone: string;
     buyerEmail: string;
@@ -22,7 +21,6 @@ export function GiftVoucherForm() {
     amount: "250",
     recipientName: "",
     recipientPhone: "",
-    message: "",
     buyerName: "",
     buyerPhone: "",
     buyerEmail: "",
@@ -63,7 +61,6 @@ export function GiftVoucherForm() {
           amount: Number(form.amount),
           recipientName: form.recipientName.trim(),
           recipientPhone: form.recipientPhone.trim(),
-          message: form.message.trim(),
           buyerName: form.buyerName.trim(),
           buyerPhone: form.buyerPhone.trim(),
           buyerEmail: form.buyerEmail.trim(),
@@ -164,20 +161,6 @@ export function GiftVoucherForm() {
           value={form.recipientPhone}
           onChange={(e) => set("recipientPhone", e.target.value)}
           placeholder="e.g. 082 123 4567"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="message" className="mb-1.5 flex items-center gap-1">
-          Your Message <span className="text-xs font-normal text-foreground/50">(optional)</span>
-        </Label>
-        <Textarea
-          id="message"
-          value={form.message}
-          onChange={(e) => set("message", e.target.value)}
-          placeholder="A note to appear on the voucher…"
-          maxLength={500}
-          className="min-h-20"
         />
       </div>
 

@@ -172,8 +172,8 @@ export function buildVoucherTicketPdf(x: {
   message?: string | null;
   layout?: VoucherLayout;
 }): Buffer {
-  const W = 842; // ticket landscape
-  const H = 420;
+  const W = 768; // ticket — matches template aspect ratio 1536:1024
+  const H = 512;
 
   const layout = { ...DEFAULT_LAYOUT, ...(x.layout ?? {}) };
 
@@ -208,46 +208,48 @@ export function buildVoucherTicketPdf(x: {
     draw.push(`0 0 ${W} ${H} re f`);
   }
 
-  // Overlay values on the template
-  const dateGap = 19; // ~1cm gap between day/month/year scaled to ticket
+  // Overlay values on the template — gold color to match view
+  const GOLD = "0.65 0.49 0.31 rg";
 
   // Amount (uppercase label exists on template, draw only the value)
   const amountStr = voucherAmountLabel(x.amount);
   const amtX = px(layout.amount.x);
-  const amtY = py(layout.amount.y);
-  draw.push(`BT /F2 24 Tf 0.15 0.15 0.15 rg ${amtX} ${H_(amtY)} Td (${escapeText(amountStr)}) Tj ET`);
+  const amtY = py(layout.amount.y) + 18 * 0.8;
+  draw.push(`BT /F2 18 Tf ${GOLD} ${amtX} ${H_(amtY)} Td (${escapeText(amountStr)}) Tj ET`);
 
   // To
   const toX = px(layout.to.x);
-  const toY = py(layout.to.y);
-  draw.push(`BT /F2 22 Tf 0.15 0.15 0.15 rg ${toX} ${H_(toY)} Td (${escapeText(x.recipientName)}) Tj ET`);
+  const toY = py(layout.to.y) + 18 * 0.8;
+  draw.push(`BT /F2 18 Tf ${GOLD} ${toX} ${H_(toY)} Td (${escapeText(x.recipientName)}) Tj ET`);
 
   // From
   if (x.buyerName) {
     const fX = px(layout.from.x);
-    const fY = py(layout.from.y);
-    draw.push(`BT /F2 22 Tf 0.15 0.15 0.15 rg ${fX} ${H_(fY)} Td (${escapeText(x.buyerName)}) Tj ET`);
+    const fY = py(layout.from.y) + 18 * 0.8;
+    draw.push(`BT /F2 18 Tf ${GOLD} ${fX} ${H_(fY)} Td (${escapeText(x.buyerName)}) Tj ET`);
   }
 
   // Voucher no
   const vX = px(layout.voucherNo.x);
-  const vY = py(layout.voucherNo.y);
-  draw.push(`BT /F1 20 Tf 0.15 0.15 0.15 rg ${vX} ${H_(vY)} Td (${escapeText(x.voucherNo)}) Tj ET`);
+  const vY = py(layout.voucherNo.y) + 14 * 0.8;
+  draw.push(`BT /F1 14 Tf ${GOLD} ${vX} ${H_(vY)} Td (${escapeText(x.voucherNo)}) Tj ET`);
 
-  // Valid until — day month year spaced ~1cm apart (scaled to ticket)
+  // Valid until — day / month / year with a small gap (scaled to ticket)
   const parts = validUntilParts(x.validUntil);
   const dX = px(layout.validUntil.x);
-  const dY = py(layout.validUntil.y);
+  const dY = py(layout.validUntil.y) + 16 * 0.8;
+  const seg = 34; // approx width of a "dd" segment at 16pt in PDF points
+  const slash = 14;
   let cursor = dX;
-  draw.push(`BT /F2 22 Tf 0.15 0.15 0.15 rg`);
+  draw.push(`BT /F2 16 Tf ${GOLD}`);
   draw.push(`${cursor} ${H_(dY)} Td (${parts.day}) Tj`);
-  cursor += 60 + 22;
+  cursor += seg + slash;
   draw.push(`${cursor} ${H_(dY)} Td (/) Tj`);
-  cursor += 22 + 60 + 22;
+  cursor += slash + seg + slash;
   draw.push(`${cursor} ${H_(dY)} Td (${parts.month}) Tj`);
-  cursor += 60 + 22;
+  cursor += seg + slash;
   draw.push(`${cursor} ${H_(dY)} Td (/) Tj`);
-  cursor += 22 + 60 + 22;
+  cursor += slash + seg + slash;
   draw.push(`${cursor} ${H_(dY)} Td (${parts.year}) Tj`);
   draw.push(`ET`);
 

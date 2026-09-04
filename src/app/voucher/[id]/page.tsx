@@ -51,13 +51,13 @@ export default async function VoucherViewPage({
           />
           {/* Values only — labels are on the template */}
           <div className="absolute inset-0">
-            <FieldValue value={voucherAmountLabel(amount)} x={layout.amount.x} y={layout.amount.y} className="text-right text-2xl font-bold text-primary-dark/80" />
-            <FieldValue value={voucher.recipientName} x={layout.to.x} y={layout.to.y} className="text-2xl" />
+            <FieldValue value={voucherAmountLabel(amount)} x={layout.amount.x} y={layout.amount.y} className="text-right text-lg font-bold" />
+            <FieldValue value={voucher.recipientName} x={layout.to.x} y={layout.to.y} className="text-lg" />
             {voucher.buyerName && (
-              <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} className="text-2xl" />
+              <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} className="text-lg" />
             )}
-            <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-2xl font-bold" />
-            <FieldValue value="" dateParts={validUntilParts(voucher.validUntil)} x={layout.validUntil.x} y={layout.validUntil.y} className="text-2xl" />
+            <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-sm font-bold" />
+            <FieldValue value="" dateParts={validUntilParts(voucher.validUntil)} x={layout.validUntil.x} y={layout.validUntil.y} className="text-base" />
           </div>
         </div>
 
@@ -98,15 +98,15 @@ function FieldValue({
       }}
     >
       {dateParts ? (
-        <p className={`flex items-center font-semibold text-foreground/80 ${className ?? ""}`}>
+        <p className={`flex items-center font-semibold text-primary-dark ${className ?? ""}`}>
           <span>{dateParts.day}</span>
-          <span className="mx-[19px]">/</span>
+          <span className="mx-[8px]">/</span>
           <span>{dateParts.month}</span>
-          <span className="mx-[19px]">/</span>
+          <span className="mx-[8px]">/</span>
           <span>{dateParts.year}</span>
         </p>
       ) : (
-        <p className={`font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
+        <p className={`font-semibold text-primary-dark ${className ?? ""}`}>{value}</p>
       )}
     </div>
   );
