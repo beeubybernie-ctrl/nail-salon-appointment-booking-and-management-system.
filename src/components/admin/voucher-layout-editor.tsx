@@ -171,10 +171,10 @@ export function VoucherLayoutEditor({ initialLayout }: { initialLayout?: Layout 
               key={field}
               onMouseDown={handleMouseDown(field)}
               onTouchStart={handleTouchStart(field)}
-              className={`absolute cursor-grab rounded-lg px-3 py-1.5 text-xs font-semibold shadow-lg backdrop-blur-sm transition-[box-shadow,transform] select-none ${
+              className={`absolute cursor-grab px-3 py-1.5 text-xs font-semibold transition-[outline,transform] select-none rounded-lg ${
                 isActive
-                  ? "z-20 scale-105 border-2 border-primary bg-primary/90 text-white shadow-xl"
-                  : "z-10 border border-primary/30 bg-white/80 text-primary-dark hover:border-primary hover:shadow-xl"
+                  ? "z-20 scale-105 outline-2 outline-primary text-primary-dark"
+                  : "z-10 outline outline-primary/60 text-primary-dark hover:z-20"
               }`}
               style={{
                 left: `${pos.x}%`,
