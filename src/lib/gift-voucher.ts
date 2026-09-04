@@ -1,13 +1,23 @@
+import { randomBytes } from "crypto";
+
 export const VOUCHER_VALIDITY_MONTHS = 3;
 
+const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no I/1/O/0 to avoid confusion
+
+function randomSuffix(len = 4): string {
+  const bytes = randomBytes(len);
+  return Array.from(bytes)
+    .map((b) => CHARS[b % CHARS.length])
+    .join("");
+}
+
 export function voucherNoFor(amount: number, purchasedAt: Date): string {
-  const cents = Math.round(amount * 100);
-  const whole = Math.floor(cents / 100).toString();
+  const whole = Math.floor(amount).toString();
   const d = new Date(purchasedAt);
   const dd = d.getDate().toString().padStart(2, "0");
   const mm = (d.getMonth() + 1).toString().padStart(2, "0");
   const yyyy = d.getFullYear().toString();
-  return `BU${whole}${dd}${mm}${yyyy}`;
+  return `BU${whole}${dd}${mm}${yyyy}${randomSuffix()}`;
 }
 
 export function voucherValidUntil(purchasedAt: Date): Date {

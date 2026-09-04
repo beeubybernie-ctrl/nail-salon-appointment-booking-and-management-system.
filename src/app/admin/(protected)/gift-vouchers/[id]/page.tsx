@@ -7,8 +7,7 @@ import { voucherAmountLabel, formatPurchaseDate, formatValidUntil } from "@/lib/
 import { whatsappLink } from "@/lib/notifications";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, Download, MessageCircle, Share2 } from "lucide-react";
+import { ChevronLeft, Download, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -25,23 +24,21 @@ export default async function VoucherDetailPage({
   if (!voucher) notFound();
 
   const amount = Number(voucher.amount);
+  const validUntilStr = formatValidUntil(voucher.validUntil);
+
   const waMessage = [
-    `Hi! Here is your Bee-U by Bernie gift voucher 🎁`,
+    `Hi! Here is your Bee-U by Bernie gift voucher`,
     ``,
     `Voucher No: ${voucher.voucherNo}`,
     `Value: ${voucherAmountLabel(amount)}`,
     `For: ${voucher.recipientName}`,
-    `Valid until: ${formatValidUntil(voucher.validUntil)}`,
+    `Valid until: ${validUntilStr}`,
     ``,
     `Present this voucher at the salon to redeem.`,
     voucher.message ? `\nMessage: ${voucher.message}` : "",
-    ``,
-    `Be You. Be Beautiful.`,
   ]
     .filter(Boolean)
     .join("\n");
-
-  const publicUrl = `${(process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "")}/voucher/${voucher.id}`;
 
   return (
     <div className="p-4 sm:p-6">
@@ -53,60 +50,64 @@ export default async function VoucherDetailPage({
       </Link>
 
       <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_380px]">
-        {/* Voucher visual */}
+        {/* Voucher visual — template with light text overlay */}
         <div className="space-y-4">
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden p-0">
             <div className="relative w-full" style={{ aspectRatio: "1536/1024" }}>
               <Image
                 src="/images/voucher-template.png"
-                alt="Voucher template"
+                alt="Voucher"
                 fill
                 className="object-cover"
                 priority
               />
-              {/* Overlay with voucher details */}
-              <div className="absolute inset-0 flex flex-col items-center justify-between p-8 text-center">
-                {/* Top section: logo */}
-                <div className="flex flex-col items-center">
+              {/* Light overlay fields */}
+              <div className="absolute inset-0 flex flex-col justify-between p-10 sm:p-16">
+                {/* Top row: logo left, amount right */}
+                <div className="flex items-start justify-between">
                   <Image
                     src="/images/bee-u-logo.png"
                     alt="Bee-U by Bernie"
-                    width={80}
-                    height={80}
-                    className="rounded-full object-contain"
+                    width={64}
+                    height={64}
+                    className="rounded-full object-contain shadow-md"
                   />
-                  <p className="mt-2 font-serif-display text-lg font-semibold text-white drop-shadow-md">
-                    Bee-U by Bernie
-                  </p>
-                  <p className="text-xs text-white/80 drop-shadow-md">Be You. Be Beautiful.</p>
+                  <div className="rounded-xl bg-white/80 px-6 py-3 text-right shadow-md backdrop-blur-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Amount</p>
+                    <p className="text-3xl font-bold text-primary-dark">{voucherAmountLabel(amount)}</p>
+                  </div>
                 </div>
 
-                {/* Middle section: voucher content */}
-                <div className="rounded-2xl bg-white/90 px-10 py-6 shadow-lg backdrop-blur-sm">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-primary-dark">
-                    Gift Voucher
-                  </p>
-                  <p className="mt-2 text-4xl font-bold text-primary-dark sm:text-5xl">
-                    {voucherAmountLabel(amount)}
-                  </p>
-                  <p className="mt-3 text-sm text-foreground/60">For</p>
-                  <p className="text-xl font-semibold text-foreground">
-                    {voucher.recipientName}
-                  </p>
-                </div>
-
-                {/* Bottom section: details */}
-                <div className="flex flex-col items-center gap-1 text-xs text-white/80 drop-shadow-md">
-                  <p className="font-mono text-sm font-semibold text-white drop-shadow-md">
-                    {voucher.voucherNo}
-                  </p>
-                  <p>Purchased: {formatPurchaseDate(voucher.purchasedAt)}</p>
-                  <p>Valid until: {formatValidUntil(voucher.validUntil)}</p>
-                  {voucher.message && (
-                    <p className="mt-1 max-w-sm italic text-white/70">
-                      &ldquo;{voucher.message}&rdquo;
-                    </p>
+                {/* Middle: To / From */}
+                <div className="mx-auto w-full max-w-lg space-y-4">
+                  <div className="rounded-xl bg-white/80 px-6 py-3 shadow-md backdrop-blur-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">To</p>
+                    <p className="text-lg font-semibold text-foreground">{voucher.recipientName}</p>
+                  </div>
+                  {voucher.buyerName && (
+                    <div className="rounded-xl bg-white/80 px-6 py-3 shadow-md backdrop-blur-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">From</p>
+                      <p className="text-lg font-semibold text-foreground">{voucher.buyerName}</p>
+                    </div>
                   )}
+                  {voucher.message && (
+                    <div className="rounded-xl bg-white/80 px-6 py-3 shadow-md backdrop-blur-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Message</p>
+                      <p className="text-sm italic text-foreground/80">&ldquo;{voucher.message}&rdquo;</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom row: voucher no left, valid until right */}
+                <div className="flex items-end justify-between">
+                  <div className="rounded-xl bg-white/80 px-5 py-3 shadow-md backdrop-blur-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Voucher No</p>
+                    <p className="font-mono text-sm font-bold text-foreground">{voucher.voucherNo}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/80 px-5 py-3 text-right shadow-md backdrop-blur-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">Valid Until</p>
+                    <p className="text-sm font-semibold text-foreground">{validUntilStr}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -118,12 +119,12 @@ export default async function VoucherDetailPage({
               voucherId={voucher.id}
               currentStatus={voucher.status}
             />
-            <Link
+            <a
               href={`/api/admin/gift-vouchers/${voucher.id}/download`}
               className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
             >
               <Download className="h-3.5 w-3.5" /> Download PDF
-            </Link>
+            </a>
             <a
               href={whatsappLink(waMessage)}
               target="_blank"
@@ -146,11 +147,11 @@ export default async function VoucherDetailPage({
               <DetailRow label="Value" value={voucherAmountLabel(amount)} bold />
               <DetailRow label="Recipient" value={voucher.recipientName} />
               {voucher.recipientPhone && (
-                <DetailRow label="Recipient Phone" value={voucher.recipientPhone} />
+                <DetailRow label="Phone" value={voucher.recipientPhone} />
               )}
               <DetailRow label="Status" value={voucher.status} />
               <DetailRow label="Purchased" value={formatPurchaseDate(voucher.purchasedAt)} />
-              <DetailRow label="Valid Until" value={formatValidUntil(voucher.validUntil)} />
+              <DetailRow label="Valid Until" value={validUntilStr} />
               {voucher.message && (
                 <DetailRow label="Message" value={voucher.message} />
               )}
@@ -164,29 +165,11 @@ export default async function VoucherDetailPage({
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <DetailRow label="Name" value={voucher.buyerName} />
-                {voucher.buyerPhone && (
-                  <DetailRow label="Phone" value={voucher.buyerPhone} />
-                )}
-                {voucher.buyerEmail && (
-                  <DetailRow label="Email" value={voucher.buyerEmail} />
-                )}
+                {voucher.buyerPhone && <DetailRow label="Phone" value={voucher.buyerPhone} />}
+                {voucher.buyerEmail && <DetailRow label="Email" value={voucher.buyerEmail} />}
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Share Voucher</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-foreground/60">
-              <p className="mb-3">
-                Share this link with the client so they can view and save their voucher:
-              </p>
-              <code className="block break-all rounded-lg bg-muted/50 p-3 text-xs text-foreground/70">
-                {publicUrl}
-              </code>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
@@ -207,9 +190,7 @@ function DetailRow({
   return (
     <div className="flex justify-between gap-4">
       <span className="text-foreground/50">{label}</span>
-      <span
-        className={`text-right ${mono ? "font-mono text-xs" : ""} ${bold ? "font-semibold text-primary-dark" : ""}`}
-      >
+      <span className={`text-right ${mono ? "font-mono text-xs" : ""} ${bold ? "font-semibold text-primary-dark" : ""}`}>
         {value}
       </span>
     </div>

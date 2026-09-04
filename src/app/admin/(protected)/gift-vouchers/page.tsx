@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { voucherAmountLabel, formatPurchaseDate, formatValidUntil } from "@/lib/gift-voucher";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { VoucherExportButtons } from "@/components/admin/voucher-export-buttons";
+import { DeleteVoucherButton, ClearAllVouchersButton } from "@/components/admin/voucher-delete-buttons";
 import Link from "next/link";
 import { Gift, MessageCircle } from "lucide-react";
 import { whatsappLink } from "@/lib/notifications";
@@ -48,7 +49,10 @@ export default async function GiftVouchersPage() {
             Track requests, mark as paid, then download and WhatsApp the voucher.
           </p>
         </div>
-        <VoucherExportButtons />
+        <div className="flex items-center gap-2">
+          <VoucherExportButtons />
+          <ClearAllVouchersButton />
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-3 gap-3">
@@ -149,6 +153,7 @@ export default async function GiftVouchersPage() {
                     >
                       View
                     </Link>
+                    <DeleteVoucherButton voucherId={v.id} />
                   </div>
                 </CardContent>
               </Card>
