@@ -6,7 +6,7 @@ import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons"
 import { VoucherExportButtons } from "@/components/admin/voucher-export-buttons";
 import { DeleteVoucherButton, ClearAllVouchersButton } from "@/components/admin/voucher-delete-buttons";
 import Link from "next/link";
-import { Gift, MessageCircle } from "lucide-react";
+import { Gift, MessageCircle, LayoutGrid } from "lucide-react";
 import { whatsappLink } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +50,12 @@ export default async function GiftVouchersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/admin/gift-vouchers/layout"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary-dark transition hover:bg-primary/10"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Layout
+          </Link>
           <VoucherExportButtons />
           <ClearAllVouchersButton />
         </div>

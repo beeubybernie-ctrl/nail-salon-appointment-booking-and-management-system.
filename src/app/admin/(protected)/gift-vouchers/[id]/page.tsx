@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { voucherAmountLabel, formatPurchaseDate, formatValidUntil } from "@/lib/gift-voucher";
+import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLayout } from "@/lib/gift-voucher";
 import { whatsappLink } from "@/lib/notifications";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ export default async function VoucherDetailPage({
 
   const amount = Number(voucher.amount);
   const validUntilStr = formatValidUntil(voucher.validUntil);
+  const layout = await getVoucherLayout();
 
   const waMessage = [
     `Hi! Here is your Bee-U by Bernie gift voucher`,
@@ -60,41 +61,42 @@ export default async function VoucherDetailPage({
                 className="object-cover"
                 priority
               />
-              {/* Transparent text overlay */}
-              <div className="absolute inset-0 flex flex-col justify-between p-10 sm:p-16">
-                {/* Top-right: amount */}
-                <div className="flex justify-end">
-                  <div className="rounded-lg bg-white/50 px-5 py-2 text-right shadow-sm backdrop-blur-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary-dark/60">Amount</p>
-                    <p className="text-3xl font-bold text-primary-dark/80">{voucherAmountLabel(amount)}</p>
-                  </div>
-                </div>
-
-                {/* Middle: To / From */}
-                <div className="mx-auto w-full max-w-lg space-y-3">
-                  <div className="rounded-lg bg-white/50 px-5 py-3 shadow-sm backdrop-blur-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary-dark/60">To</p>
-                    <p className="text-lg font-semibold text-foreground/80">{voucher.recipientName}</p>
-                  </div>
-                  {voucher.buyerName && (
-                    <div className="rounded-lg bg-white/50 px-5 py-3 shadow-sm backdrop-blur-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-primary-dark/60">From</p>
-                      <p className="text-lg font-semibold text-foreground/80">{voucher.buyerName}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom row: voucher no left, valid until right */}
-                <div className="flex items-end justify-between">
-                  <div className="rounded-lg bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary-dark/60">Voucher No</p>
-                    <p className="font-mono text-sm font-bold text-foreground/80">{voucher.voucherNo}</p>
-                  </div>
-                  <div className="rounded-lg bg-white/50 px-4 py-2 text-right shadow-sm backdrop-blur-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary-dark/60">Valid Until</p>
-                    <p className="text-sm font-semibold text-foreground/80">{validUntilStr}</p>
-                  </div>
-                </div>
+              {/* Transparent text overlay — positions from layout editor */}
+              <div className="absolute inset-0">
+                <FieldOverlay
+                  label="Amount"
+                  value={voucherAmountLabel(amount)}
+                  x={layout.amount.x}
+                  y={layout.amount.y}
+                  className="text-right text-3xl font-bold text-primary-dark/80"
+                />
+                <FieldOverlay
+                  label="To"
+                  value={voucher.recipientName}
+                  x={layout.to.x}
+                  y={layout.to.y}
+                />
+                {voucher.buyerName && (
+                  <FieldOverlay
+                    label="From"
+                    value={voucher.buyerName}
+                    x={layout.from.x}
+                    y={layout.from.y}
+                  />
+                )}
+                <FieldOverlay
+                  label="Voucher No"
+                  value={voucher.voucherNo}
+                  x={layout.voucherNo.x}
+                  y={layout.voucherNo.y}
+                  className="font-mono text-sm font-bold"
+                />
+                <FieldOverlay
+                  label="Valid Until"
+                  value={validUntilStr}
+                  x={layout.validUntil.x}
+                  y={layout.validUntil.y}
+                />
               </div>
             </div>
           </Card>
@@ -155,6 +157,30 @@ export default async function VoucherDetailPage({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function FieldOverlay({
+  label,
+  value,
+  x,
+  y,
+  className,
+}: {
+  label: string;
+  value: string;
+  x: number;
+  y: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className="absolute rounded-lg bg-white/50 px-4 py-2 shadow-sm backdrop-blur-sm"
+      style={{ left: `${x}%`, top: `${y}%` }}
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-dark/50">{label}</p>
+      <p className={`text-sm font-semibold text-foreground/80 ${className ?? ""}`}>{value}</p>
     </div>
   );
 }

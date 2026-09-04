@@ -1,6 +1,38 @@
 import { randomBytes } from "crypto";
+import { prisma } from "./prisma";
 
 export const VOUCHER_VALIDITY_MONTHS = 3;
+
+export interface FieldPos {
+  x: number;
+  y: number;
+}
+
+export interface VoucherLayout {
+  amount: FieldPos;
+  to: FieldPos;
+  from: FieldPos;
+  voucherNo: FieldPos;
+  validUntil: FieldPos;
+}
+
+const DEFAULT_LAYOUT: VoucherLayout = {
+  amount: { x: 75, y: 5 },
+  to: { x: 30, y: 40 },
+  from: { x: 30, y: 55 },
+  voucherNo: { x: 5, y: 85 },
+  validUntil: { x: 70, y: 85 },
+};
+
+export async function getVoucherLayout(): Promise<VoucherLayout> {
+  const setting = await prisma.setting.findUnique({ where: { key: "voucherLayout" } });
+  if (!setting) return DEFAULT_LAYOUT;
+  try {
+    return { ...DEFAULT_LAYOUT, ...JSON.parse(setting.value) };
+  } catch {
+    return DEFAULT_LAYOUT;
+  }
+}
 
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no I/1/O/0 to avoid confusion
 
