@@ -52,13 +52,13 @@ export default async function VoucherViewPage({
           />
           {/* Values only — labels are on the template */}
           <div className="absolute inset-0">
-            <FieldValue value={voucherAmountLabel(amount)} x={layout.amount.x} y={layout.amount.y} className="text-right text-2xl font-bold text-primary-dark/80" />
-            <FieldValue value={voucher.recipientName} x={layout.to.x} y={layout.to.y} />
+            <FieldValue value={voucherAmountLabel(amount)} x={layout.amount.x} y={layout.amount.y} className="text-right text-4xl font-bold text-primary-dark/80" />
+            <FieldValue value={voucher.recipientName} x={layout.to.x} y={layout.to.y} className="text-xl" />
             {voucher.buyerName && (
-              <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} />
+              <FieldValue value={voucher.buyerName} x={layout.from.x} y={layout.from.y} className="text-xl" />
             )}
-            <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-sm font-bold" />
-            <FieldValue value={validUntilStr} x={layout.validUntil.x} y={layout.validUntil.y} width="25%" alignRight className="text-lg" />
+            <FieldValue value={voucher.voucherNo} x={layout.voucherNo.x} y={layout.voucherNo.y} className="font-mono text-xl font-bold" />
+            <FieldValue value={validUntilStr} x={layout.validUntil.x} y={layout.validUntil.y} width="45%" alignRight className="text-3xl" />
           </div>
         </div>
 

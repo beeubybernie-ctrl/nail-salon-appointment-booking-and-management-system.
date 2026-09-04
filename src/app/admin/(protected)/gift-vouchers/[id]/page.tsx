@@ -67,33 +67,35 @@ export default async function VoucherDetailPage({
                   value={voucherAmountLabel(amount)}
                   x={layout.amount.x}
                   y={layout.amount.y}
-                  className="text-right text-3xl font-bold text-primary-dark/80"
+                  className="text-right text-4xl font-bold text-primary-dark/80"
                 />
                 <FieldOverlay
                   value={voucher.recipientName}
                   x={layout.to.x}
                   y={layout.to.y}
+                  className="text-xl"
                 />
                 {voucher.buyerName && (
                   <FieldOverlay
                     value={voucher.buyerName}
                     x={layout.from.x}
                     y={layout.from.y}
+                    className="text-xl"
                   />
                 )}
                 <FieldOverlay
                   value={voucher.voucherNo}
                   x={layout.voucherNo.x}
                   y={layout.voucherNo.y}
-                  className="font-mono text-sm font-bold"
+                  className="font-mono text-xl font-bold"
                 />
                 <FieldOverlay
                   value={validUntilStr}
                   x={layout.validUntil.x}
                   y={layout.validUntil.y}
-                  width="25%"
+                  width="45%"
                   alignRight
-                  className="text-lg"
+                  className="text-3xl"
                 />
               </div>
             </div>
