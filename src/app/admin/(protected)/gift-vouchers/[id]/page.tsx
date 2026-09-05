@@ -118,7 +118,15 @@ export default async function VoucherDetailPage({
               voucherId={voucher.id}
               currentStatus={voucher.status}
             />
-            <VoucherPngDownload filename={`bee-u-voucher-${voucher.voucherNo}.png`} />
+            <VoucherPngDownload
+              voucherNo={voucher.voucherNo}
+              amountLabel={voucherAmountLabel(amount)}
+              recipientName={voucher.recipientName}
+              buyerName={voucher.buyerName}
+              validUntil={`${validUntilStr.split("/").join(" / ")}`}
+              layout={layout}
+              filename={`bee-u-voucher-${voucher.voucherNo}.png`}
+            />
             <a
               href={whatsappLink(waMessage, voucher.recipientPhone ? toWhatsAppNumber(voucher.recipientPhone) : undefined)}
               target="_blank"
