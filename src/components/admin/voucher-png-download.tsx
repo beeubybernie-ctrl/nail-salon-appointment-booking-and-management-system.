@@ -36,23 +36,31 @@ export function VoucherPngDownload({
     img.onerror = () => setReady(true);
   }, []);
 
-  const textStyle = (f: VoucherLayout[keyof VoucherLayout], alignRight = false) => ({
-    position: "absolute" as const,
-    left: `${f.x}%`,
-    top: `${f.y}%`,
-    fontSize: `${f.size}px`,
-    fontFamily:
-      f.font === "mono"
-        ? "ui-monospace, 'Courier New', monospace"
-        : f.font === "serif"
-        ? "Georgia, serif"
-        : "Arial, Helvetica, sans-serif",
-    fontWeight: 400,
-    color: "#a67c4e",
-    lineHeight: 1,
-    whiteSpace: "nowrap" as const,
-    textAlign: alignRight ? "right" as const : "left" as const,
-  });
+  const textStyle = (f: VoucherLayout[keyof VoucherLayout], alignRight = false) => {
+    // The view shows the 1536-wide template scaled down to fit its card, so its
+    // px font sizes look bigger relative to the template. To match that in a
+    // native 1536px PNG, scale the font sizes up by the same ratio.
+    const card = document.querySelector<HTMLElement>("[data-voucher-card]");
+    const cardWidth = card?.offsetWidth || W;
+    const scale = W / cardWidth;
+    return {
+      position: "absolute" as const,
+      left: `${f.x}%`,
+      top: `${f.y}%`,
+      fontSize: `${f.size * scale}px`,
+      fontFamily:
+        f.font === "mono"
+          ? "ui-monospace, 'Courier New', monospace"
+          : f.font === "serif"
+          ? "Georgia, serif"
+          : "Arial, Helvetica, sans-serif",
+      fontWeight: 400,
+      color: "#a67c4e",
+      lineHeight: 1,
+      whiteSpace: "nowrap" as const,
+      textAlign: alignRight ? ("right" as const) : ("left" as const),
+    };
+  };
 
   async function download() {
     if (!captureRef.current) return;
