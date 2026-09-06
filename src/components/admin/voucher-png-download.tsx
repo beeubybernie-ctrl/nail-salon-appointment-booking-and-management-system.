@@ -117,7 +117,7 @@ export function VoucherPngDownload({
           <div style={textStyle(layout.to)}>{recipientName}</div>
           {buyerName && <div style={textStyle(layout.from)}>{buyerName}</div>}
           <div style={textStyle(layout.voucherNo, true, 0, -1.2)}>{voucherNo}</div>
-          <div style={textStyle(layout.validUntil, false, 2, 0)}>{validUntil}</div>
+          <div style={textStyle(layout.validUntil, false, 4, 0)}>{validUntil}</div>
         </div>
       </div>
 
