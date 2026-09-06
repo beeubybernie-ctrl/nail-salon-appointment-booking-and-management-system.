@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatPrice, formatTime24to12, formatDate } from "@/lib/business";
+import { voucherAmountLabel } from "@/lib/gift-voucher";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { ExportBookingsButton } from "@/components/admin/export-bookings-button";
@@ -14,6 +15,7 @@ import {
   Signature,
   Sparkles,
   ArrowRight,
+  Gift,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +35,7 @@ export default async function AdminDashboardPage() {
   const next30End = new Date(todayStart);
   next30End.setDate(todayStart.getDate() + 30);
 
-  const [todaysAppointments, upcoming7, upcoming30, stats] = await Promise.all([
+  const [todaysAppointments, upcoming7, upcoming30, stats, pendingVouchers, pendingVoucherCount] = await Promise.all([
     prisma.appointment.findMany({
       where: {
         date: { gte: todayStart, lt: todayEnd },
@@ -62,6 +64,14 @@ export default async function AdminDashboardPage() {
       by: ["status"],
       _count: { _all: true },
       _sum: { price: true },
+    }),
+    prisma.giftVoucher.findMany({
+      where: { status: "REQUESTED" },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+    prisma.giftVoucher.count({
+      where: { status: "REQUESTED" },
     }),
   ]);
 
@@ -129,6 +139,11 @@ export default async function AdminDashboardPage() {
           icon={<CheckCircle2 className="h-5 w-5 text-blue-600" />}
           label="Completed"
           value={(statusCounts["COMPLETED"] ?? 0).toString()}
+        />
+        <StatCard
+          icon={<Gift className="h-5 w-5 text-pink-600" />}
+          label="Gift Voucher Requests"
+          value={pendingVoucherCount.toString()}
         />
         <StatCard
           icon={<Banknote className="h-5 w-5 text-primary-dark" />}
@@ -228,6 +243,56 @@ export default async function AdminDashboardPage() {
                     <div className="text-right">
                       <p className="text-sm font-medium">{formatDateLong(a.date)}</p>
                       <p className="text-xs text-primary-dark">{formatTime24to12(a.startTime)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Pending gift voucher requests */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Pending Gift Voucher Requests</h2>
+          <Link href="/admin/gift-vouchers" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+            View all <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        {pendingVouchers.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center gap-2 p-8 text-center">
+              <Gift className="h-10 w-10 text-primary/40" />
+              <p className="font-medium">No pending gift voucher requests</p>
+              <p className="text-sm text-foreground/60">
+                New voucher purchases will appear here.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {pendingVouchers.map((v) => (
+              <Link key={v.id} href={`/admin/gift-vouchers/${v.id}`}>
+                <Card className="hover:border-primary/40">
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="text-sm font-semibold">{v.recipientName}</p>
+                      <p className="text-sm text-foreground/60">
+                        {v.voucherNo} · Buyer: {v.buyerName || "—"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-primary-dark">
+                        {voucherAmountLabel(Number(v.amount))}
+                      </p>
+                      <p className="text-xs text-foreground/60">
+                        {new Date(v.createdAt).toLocaleDateString("en-ZA", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

@@ -8,6 +8,8 @@ import { AvailabilityMiniCalendar } from "@/components/client/booking/availabili
 import { whatsappLink, contactWhatsAppMessage } from "@/lib/notifications";
 import { BUSINESS } from "@/lib/business";
 
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <div>
