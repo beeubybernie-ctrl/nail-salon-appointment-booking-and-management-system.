@@ -36,7 +36,12 @@ export function VoucherPngDownload({
     img.onerror = () => setReady(true);
   }, []);
 
-  const textStyle = (f: VoucherLayout[keyof VoucherLayout], alignRight = false) => {
+  const textStyle = (
+    f: VoucherLayout[keyof VoucherLayout],
+    alignRight = false,
+    dx = 0,
+    dy = 0
+  ) => {
     // The view shows the 1536-wide template scaled down to fit its card, so its
     // px font sizes look bigger relative to the template. To match that in a
     // native 1536px PNG, scale the font sizes up by the same ratio.
@@ -45,8 +50,8 @@ export function VoucherPngDownload({
     const scale = W / cardWidth;
     return {
       position: "absolute" as const,
-      left: `${f.x}%`,
-      top: `${f.y}%`,
+      left: `${f.x + dx}%`,
+      top: `${f.y + dy}%`,
       fontSize: `${f.size * scale}px`,
       fontFamily:
         f.font === "mono"
@@ -108,11 +113,11 @@ export function VoucherPngDownload({
           />
         )}
         <div style={{ position: "absolute", inset: 0 }}>
-          <div style={textStyle(layout.amount, true)}>{amountLabel}</div>
+          <div style={textStyle(layout.amount, true, 0, -1)}>{amountLabel}</div>
           <div style={textStyle(layout.to)}>{recipientName}</div>
           {buyerName && <div style={textStyle(layout.from)}>{buyerName}</div>}
-          <div style={textStyle(layout.voucherNo, true)}>{voucherNo}</div>
-          <div style={textStyle(layout.validUntil)}>{validUntil}</div>
+          <div style={textStyle(layout.voucherNo, true, 0, -1.2)}>{voucherNo}</div>
+          <div style={textStyle(layout.validUntil, false, 2, 0)}>{validUntil}</div>
         </div>
       </div>
 
