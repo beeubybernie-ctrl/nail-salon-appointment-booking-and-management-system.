@@ -134,6 +134,7 @@ export default async function AdminDashboardPage() {
           icon={<Signature className="h-5 w-5 text-amber-600" />}
           label="Pending Requests"
           value={(statusCounts["PENDING"] ?? 0).toString()}
+          href="/admin/appointments"
         />
         <StatCard
           icon={<CheckCircle2 className="h-5 w-5 text-blue-600" />}
@@ -144,6 +145,7 @@ export default async function AdminDashboardPage() {
           icon={<Gift className="h-5 w-5 text-pink-600" />}
           label="Gift Voucher Requests"
           value={pendingVoucherCount.toString()}
+          href="/admin/gift-vouchers"
         />
         <StatCard
           icon={<Banknote className="h-5 w-5 text-primary-dark" />}
@@ -316,9 +318,9 @@ export default async function AdminDashboardPage() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <Card>
+function StatCard({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href?: string }) {
+  const inner = (
+    <Card className="h-full transition hover:border-primary/40">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 text-foreground/60">{icon}</div>
         <p className="mt-2 text-xl font-bold">{value}</p>
@@ -326,6 +328,10 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
       </CardContent>
     </Card>
   );
+  if (href) {
+    return <Link href={href}>{inner}</Link>;
+  }
+  return inner;
 }
 
 function StatusStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {

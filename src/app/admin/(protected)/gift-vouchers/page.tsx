@@ -97,7 +97,7 @@ export default async function GiftVouchersPage() {
       ) : (
         <div className="space-y-3">
           {vouchers.map((v) => {
-            const waMessage = `Hi! Your Bee-U by Bernie gift voucher (${v.voucherNo}) for ${voucherAmountLabel(Number(v.amount))} is ready. Present it at the salon to redeem. Valid until ${formatValidUntil(v.validUntil)}.\n\nOpen & download your voucher here: ${APP_URL}/voucher/${v.id}`;
+            const waMessage = `Hi! Your Bee-U by Bernie gift voucher (${v.voucherNo}) for ${voucherAmountLabel(Number(v.amount))} is ready for ${v.recipientName}. Share this voucher with them or download it:\n\n${APP_URL}/voucher/${v.id}\n\nValid until ${formatValidUntil(v.validUntil)}. Present at the salon to redeem.`;
             return (
               <Card key={v.id}>
                 <CardContent className="p-4">
@@ -142,7 +142,7 @@ export default async function GiftVouchersPage() {
                       currentStatus={v.status}
                     />
                     <a
-                      href={whatsappLink(waMessage, v.recipientPhone ? toWhatsAppNumber(v.recipientPhone) : undefined)}
+                      href={whatsappLink(waMessage, v.buyerPhone ? toWhatsAppNumber(v.buyerPhone) : undefined)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-2 text-xs font-medium text-white hover:bg-[#1eb958]"

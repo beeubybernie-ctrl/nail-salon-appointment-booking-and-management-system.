@@ -32,16 +32,12 @@ export default async function VoucherDetailPage({
   const layout = await getVoucherLayout();
 
   const waMessage = [
-    `Hi! Here is your Bee-U by Bernie gift voucher`,
+    `Hi! Your Bee-U by Bernie gift voucher (${voucher.voucherNo}) for ${voucherAmountLabel(amount)} is ready for ${voucher.recipientName}.`,
     ``,
-    `Voucher No: ${voucher.voucherNo}`,
-    `Value: ${voucherAmountLabel(amount)}`,
-    `For: ${voucher.recipientName}`,
-    `Valid until: ${validUntilStr}`,
+    `Share this voucher with them or download it:`,
+    `${APP_URL}/voucher/${voucher.id}`,
     ``,
-    `Present this voucher at the salon to redeem.`,
-    ``,
-    `View / download your voucher: ${APP_URL}/voucher/${voucher.id}`,
+    `Valid until: ${validUntilStr}. Present at the salon to redeem.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -128,7 +124,7 @@ export default async function VoucherDetailPage({
               filename={`bee-u-voucher-${voucher.voucherNo}.png`}
             />
             <a
-              href={whatsappLink(waMessage, voucher.recipientPhone ? toWhatsAppNumber(voucher.recipientPhone) : undefined)}
+              href={whatsappLink(waMessage, voucher.buyerPhone ? toWhatsAppNumber(voucher.buyerPhone) : undefined)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-2 text-xs font-medium text-white hover:bg-[#1eb958]"
