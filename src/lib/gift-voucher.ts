@@ -3,6 +3,18 @@ import { prisma } from "./prisma";
 
 export const VOUCHER_VALIDITY_MONTHS = 3;
 
+/**
+ * The design width the voucher layout was tuned at (the template is 1536px wide;
+ * positions are percentages; font sizes are designed for a ~DESIGN_W card). Used
+ * so the voucher scales consistently on any screen and in exported images.
+ */
+export const VOUCHER_DESIGN_WIDTH = 800;
+
+/** Convert a px font size (designed at VOUCHER_DESIGN_WIDTH) to container-width units. */
+export function voucherFontCqw(size: number): string {
+  return `${(size / VOUCHER_DESIGN_WIDTH) * 100}cqw`;
+}
+
 export interface FieldPos {
   x: number;
   y: number;

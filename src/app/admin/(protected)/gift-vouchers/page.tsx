@@ -7,7 +7,9 @@ import { VoucherExportButtons } from "@/components/admin/voucher-export-buttons"
 import { DeleteVoucherButton, ClearAllVouchersButton } from "@/components/admin/voucher-delete-buttons";
 import Link from "next/link";
 import { Gift, MessageCircle, LayoutGrid } from "lucide-react";
-import { whatsappLink } from "@/lib/notifications";
+import { whatsappLink, toWhatsAppNumber } from "@/lib/notifications";
+
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://bee-u-app.vercel.app").trim().replace(/\/+$/, "");
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +97,7 @@ export default async function GiftVouchersPage() {
       ) : (
         <div className="space-y-3">
           {vouchers.map((v) => {
-            const waMessage = `Hi! Your Bee-U by Bernie gift voucher (${v.voucherNo}) for ${voucherAmountLabel(Number(v.amount))} is ready. Present it at the salon to redeem. Valid until ${formatValidUntil(v.validUntil)}.`;
+            const waMessage = `Hi! Your Bee-U by Bernie gift voucher (${v.voucherNo}) for ${voucherAmountLabel(Number(v.amount))} is ready. Present it at the salon to redeem. Valid until ${formatValidUntil(v.validUntil)}.\n\nOpen & download your voucher here: ${APP_URL}/voucher/${v.id}`;
             return (
               <Card key={v.id}>
                 <CardContent className="p-4">
@@ -140,7 +142,7 @@ export default async function GiftVouchersPage() {
                       currentStatus={v.status}
                     />
                     <a
-                      href={whatsappLink(waMessage)}
+                      href={whatsappLink(waMessage, v.recipientPhone ? toWhatsAppNumber(v.recipientPhone) : undefined)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-2 text-xs font-medium text-white hover:bg-[#1eb958]"

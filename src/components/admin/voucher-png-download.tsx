@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { Download } from "lucide-react";
-import { VoucherLayout } from "@/lib/gift-voucher";
+import { VoucherLayout, VOUCHER_DESIGN_WIDTH } from "@/lib/gift-voucher";
 
 const W = 1536;
 const H = 1024;
@@ -42,12 +42,10 @@ export function VoucherPngDownload({
     dx = 0,
     dy = 0
   ) => {
-    // The view shows the 1536-wide template scaled down to fit its card, so its
-    // px font sizes look bigger relative to the template. To match that in a
-    // native 1536px PNG, scale the font sizes up by the same ratio.
-    const card = document.querySelector<HTMLElement>("[data-voucher-card]");
-    const cardWidth = card?.offsetWidth || W;
-    const scale = W / cardWidth;
+    // The layout font sizes are designed for a VOUCHER_DESIGN_WIDTH card. Scale
+    // them up to the native 1536px template. This is a FIXED scale (independent
+    // of the device/viewport) so mobile and desktop produce identical PNGs.
+    const scale = W / VOUCHER_DESIGN_WIDTH;
     return {
       position: "absolute" as const,
       left: `${f.x + dx}%`,

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLayout, validUntilParts } from "@/lib/gift-voucher";
+import { voucherAmountLabel, formatPurchaseDate, formatValidUntil, getVoucherLayout, validUntilParts, voucherFontCqw } from "@/lib/gift-voucher";
 import { whatsappLink, toWhatsAppNumber } from "@/lib/notifications";
 import { VoucherStatusButtons } from "@/components/admin/voucher-status-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,7 +59,7 @@ export default async function VoucherDetailPage({
         {/* Voucher visual — template with transparent text overlay */}
         <div className="space-y-4">
           <Card className="overflow-hidden p-0">
-            <div className="relative w-full" data-voucher-card style={{ aspectRatio: "1536/1024" }}>
+            <div className="relative w-full" data-voucher-card style={{ aspectRatio: "1536/1024", containerType: "inline-size" }}>
               <Image
                 src="/images/voucher-template.png"
                 alt="Voucher"
@@ -195,7 +195,7 @@ function FieldOverlay({
   alignRight?: boolean;
 }) {
   const textStyle: CSSProperties = {
-    fontSize: `${size}px`,
+    fontSize: voucherFontCqw(size),
     fontFamily: font === "mono" ? "ui-monospace, monospace" : "inherit",
   };
   return (
@@ -211,9 +211,9 @@ function FieldOverlay({
       {dateParts ? (
         <p className="flex items-center text-primary-dark" style={textStyle}>
           <span>{dateParts.day}</span>
-          <span className="mx-[8px]">/</span>
+          <span className="mx-[1cqw]">/</span>
           <span>{dateParts.month}</span>
-          <span className="mx-[8px]">/</span>
+          <span className="mx-[1cqw]">/</span>
           <span>{dateParts.year}</span>
         </p>
       ) : (

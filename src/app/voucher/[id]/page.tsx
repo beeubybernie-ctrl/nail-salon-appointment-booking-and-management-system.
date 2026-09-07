@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { voucherAmountLabel, getVoucherLayout, validUntilParts, formatValidUntil } from "@/lib/gift-voucher";
+import { voucherAmountLabel, getVoucherLayout, validUntilParts, formatValidUntil, voucherFontCqw } from "@/lib/gift-voucher";
 import { BUSINESS } from "@/lib/business";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
@@ -43,7 +43,7 @@ export default async function VoucherViewPage({
         <div
           className="relative overflow-hidden rounded-3xl shadow-2xl"
           data-voucher-card
-          style={{ aspectRatio: "1536/1024" }}
+          style={{ aspectRatio: "1536/1024", containerType: "inline-size" }}
         >
           <Image
             src="/images/voucher-template.png"
@@ -105,7 +105,7 @@ function FieldValue({
   alignRight?: boolean;
 }) {
   const textStyle: CSSProperties = {
-    fontSize: `${size}px`,
+    fontSize: voucherFontCqw(size),
     fontFamily: font === "mono" ? "ui-monospace, monospace" : "inherit",
   };
   return (
@@ -121,9 +121,9 @@ function FieldValue({
       {dateParts ? (
         <p className="flex items-center text-primary-dark" style={textStyle}>
           <span>{dateParts.day}</span>
-          <span className="mx-[8px]">/</span>
+          <span className="mx-[1cqw]">/</span>
           <span>{dateParts.month}</span>
-          <span className="mx-[8px]">/</span>
+          <span className="mx-[1cqw]">/</span>
           <span>{dateParts.year}</span>
         </p>
       ) : (
